@@ -18,5 +18,20 @@
     "name": "Generate Questions from Reading",
     "description": "Create questions based on uploaded/selected reading material",
     "prompt": "Based on the following course material, generate {num_questions} {question_type} questions that test student comprehension at the college level. Questions should require understanding, not just memorization.\n\nMaterial:\n{source_material}\n\nFocus on: {topic}\n\nReturn ONLY valid JSON (no markdown fences): {\"title\": \"Quiz: <topic>\", \"questions\": [{\"question_text\": \"<p>...</p>\", \"question_type\": \"multiple_choice_question\", \"points_possible\": {points}, \"answers\": [{\"text\": \"...\", \"correct\": true}, {\"text\": \"...\", \"correct\": false}, {\"text\": \"...\", \"correct\": false}, {\"text\": \"...\", \"correct\": false}]}]}"
+  },
+  "generate_assignment": {
+    "name": "Generate Assignment",
+    "description": "Create a complete assignment with instructions and grading criteria",
+    "prompt": "You are creating a college-level assignment.\n\nSource material:\n{source_material}\n\nTopic and instructor notes: {topic}\n\nGenerate a well-structured assignment with:\n1. A clear, descriptive title\n2. Detailed student instructions in HTML format (use <p>, <ol>, <ul>, <strong> tags)\n3. A grading rubric or criteria section\n4. Estimated effort level and any prerequisites\n\nReturn ONLY valid JSON (no markdown fences):\n{\"title\": \"Assignment title\", \"description\": \"<p>Full HTML instructions...</p>\", \"points_possible\": 100}"
+  },
+  "generate_exam": {
+    "name": "Generate Exam",
+    "description": "Create a comprehensive exam with mixed question types",
+    "prompt": "You are creating a college-level exam.\n\nSource material:\n{source_material}\n\nTopic: {topic}\n\nGenerate a comprehensive exam with {num_questions} questions using a mix of question types (multiple choice, short answer, essay, true/false). The exam should test different levels of understanding (recall, comprehension, application, analysis).\n\nReturn ONLY valid JSON (no markdown fences):\n{\"title\": \"Exam: <topic>\", \"questions\": [{\"question_text\": \"<p>...</p>\", \"question_type\": \"multiple_choice_question\", \"points_possible\": {points}, \"answers\": [{\"text\": \"...\", \"correct\": true}, {\"text\": \"...\", \"correct\": false}]}]}\n\nVary question types: multiple_choice_question, true_false_question, short_answer_question, essay_question."
+  },
+  "review_exam": {
+    "name": "Review Exam",
+    "description": "Check an exam for coverage, difficulty balance, and wording issues",
+    "prompt": "You are an expert exam reviewer for a college-level course. Review the following exam carefully and assess:\n\n1. Coverage: Does it test a reasonable breadth of topics?\n2. Difficulty balance: Is there a good mix of easy, medium, and hard questions?\n3. Bloom's taxonomy levels: Are different cognitive levels tested?\n4. Ambiguous or unclear wording\n5. Questions where multiple answers could be correct\n6. Time management: Is the exam doable in the allotted time?\n7. Point distribution: Is it fair?\n\nExam content:\n{content}\n\nProvide a detailed review with specific suggestions for each issue found."
   }
 }

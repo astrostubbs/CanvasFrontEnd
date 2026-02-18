@@ -294,6 +294,12 @@ select.form-input { cursor: pointer; }
 .source-check-item:hover { background: #f5f5f5; }
 .source-check-item input[type="checkbox"] { accent-color: #A51C30; }
 
+/* ── AI Macro Items ──────────────────────────────── */
+.macro-item { padding: 10px 12px; cursor: pointer; border-radius: 6px; margin-bottom: 4px; border: 1px solid transparent; transition: all 0.15s; }
+.macro-item:hover { background: #f5f5f5; border-color: #e0e0e0; }
+.macro-item .macro-name { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 2px; }
+.macro-item .macro-desc { font-size: 11px; color: #888; line-height: 1.3; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: #f5f5f5; }
@@ -370,6 +376,7 @@ select.form-input { cursor: pointer; }
                 <div class="editor-sidebar-header">
                     <span>Assignments</span>
                     <button class="btn small" onclick="showNewAssignmentForm()">+ New</button>
+                    <button class="btn small secondary" onclick="showAIGenerateAssignment()" title="Generate assignment with AI">AI Generate</button>
                 </div>
                 <div class="editor-sidebar-list" id="assignment-list">
                     <div style="padding: 12px; color: #666; font-size: 14px;">Select a course first</div>
@@ -516,24 +523,38 @@ Or type inline LaTeX with $...$ delimiters and click 'Convert All $...$':
 
     <!-- ═══ AI ASSISTANT TAB ═══ -->
     <div class="tab-view" id="view-ai">
-        <div class="chat-container">
-            <div class="chat-messages" id="chat-messages">
-                <div class="chat-msg system">
-                    <div class="bubble">
-                        AI Assistant powered by Claude. I can help you create quiz questions, write assignment descriptions, draft announcements, and more. Select a course above for context.
-                    </div>
+        <div class="editor-layout">
+            <!-- Left: Macros / Skills Panel -->
+            <div class="editor-sidebar" style="width:240px;">
+                <div class="editor-sidebar-header">
+                    <span>AI Skills</span>
+                    <button class="btn small secondary" onclick="openPromptEditor()" title="Edit prompts" style="font-size:11px;">&#9881;</button>
+                </div>
+                <div class="editor-sidebar-list" id="ai-macros-list" style="padding:4px;">
+                    <div style="padding:8px; color:#666; font-size:12px;">Loading macros...</div>
                 </div>
             </div>
-            <div class="chat-suggestions" id="chat-suggestions">
-                <span class="chat-suggestion" onclick="aiSuggest(this)">Generate 5 multiple choice questions about...</span>
-                <span class="chat-suggestion" onclick="aiSuggest(this)">Write an assignment description for...</span>
-                <span class="chat-suggestion" onclick="aiSuggest(this)">Draft an announcement about...</span>
-                <span class="chat-suggestion" onclick="aiSuggest(this)">Create a rubric for...</span>
-            </div>
-            <div class="chat-input-row">
-                <textarea id="chat-input" placeholder="Ask Claude anything about your course..." rows="2"
-                    onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChat();}"></textarea>
-                <button class="btn" onclick="sendChat()" id="chat-send-btn">Send</button>
+            <div class="resizer resizer-col" data-resizer="sidebar"></div>
+            <!-- Right: Chat -->
+            <div class="chat-container" style="flex:1;">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-msg system">
+                        <div class="bubble">
+                            AI Assistant powered by Claude. Use the skills panel on the left for common tasks, or chat freely below. Select a course above for context.
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-suggestions" id="chat-suggestions">
+                    <span class="chat-suggestion" onclick="aiSuggest(this)">Generate 5 multiple choice questions about...</span>
+                    <span class="chat-suggestion" onclick="aiSuggest(this)">Write an assignment description for...</span>
+                    <span class="chat-suggestion" onclick="aiSuggest(this)">Draft an announcement about...</span>
+                    <span class="chat-suggestion" onclick="aiSuggest(this)">Create a rubric for...</span>
+                </div>
+                <div class="chat-input-row">
+                    <textarea id="chat-input" placeholder="Ask Claude anything about your course..." rows="2"
+                        onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+                    <button class="btn" onclick="sendChat()" id="chat-send-btn">Send</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1628,39 +1649,92 @@ async function saveQuestion(questionId) {
 function showAddQuestion() {
     const form = document.getElementById("add-question-form");
     form.style.display = "block";
+    // Step 1: Pick question type
     form.innerHTML = `
         <div class="question-card" style="border-color: #A51C30;">
-            <h4 style="color: #A51C30; margin-bottom: 12px;">New Question</h4>
-            <div class="form-row">
-                <div class="form-group" style="flex:2;">
-                    <label>Question Type</label>
-                    <select class="form-input" id="nq-type" onchange="updateAnswerForm()">
-                        <option value="multiple_choice_question">Multiple Choice</option>
-                        <option value="true_false_question">True / False</option>
-                        <option value="short_answer_question">Short Answer</option>
-                        <option value="essay_question">Essay</option>
-                        <option value="numerical_question">Numerical</option>
-                    </select>
+            <h4 style="color: #A51C30; margin-bottom: 12px;">Add New Question</h4>
+            <div class="form-group">
+                <label>Select Question Type</label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;">
+                    <button class="btn secondary" style="padding:12px; text-align:left;" onclick="showQuestionForm('multiple_choice_question')"><strong>Multiple Choice</strong><br><span style="font-size:11px; font-weight:400; color:#888;">4 answer options, one correct</span></button>
+                    <button class="btn secondary" style="padding:12px; text-align:left;" onclick="showQuestionForm('true_false_question')"><strong>True / False</strong><br><span style="font-size:11px; font-weight:400; color:#888;">Two options: True or False</span></button>
+                    <button class="btn secondary" style="padding:12px; text-align:left;" onclick="showQuestionForm('short_answer_question')"><strong>Short Answer</strong><br><span style="font-size:11px; font-weight:400; color:#888;">Student types a text answer</span></button>
+                    <button class="btn secondary" style="padding:12px; text-align:left;" onclick="showQuestionForm('essay_question')"><strong>Essay</strong><br><span style="font-size:11px; font-weight:400; color:#888;">Free-form written response</span></button>
+                    <button class="btn secondary" style="padding:12px; text-align:left;" onclick="showQuestionForm('numerical_question')"><strong>Numerical</strong><br><span style="font-size:11px; font-weight:400; color:#888;">Student enters a number</span></button>
+                    <button class="btn secondary" style="padding:12px; text-align:left;" onclick="showQuestionForm('multiple_answers_question')"><strong>Multiple Answers</strong><br><span style="font-size:11px; font-weight:400; color:#888;">Select all that apply</span></button>
                 </div>
-                <div class="form-group" style="flex:1;">
-                    <label>Points</label>
-                    <input type="number" class="form-input" id="nq-points" value="1" min="0">
-                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn secondary" onclick="document.getElementById('add-question-form').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    `;
+}
+
+function showQuestionForm(questionType) {
+    const form = document.getElementById("add-question-form");
+    const typeLabels = {
+        multiple_choice_question: "Multiple Choice",
+        true_false_question: "True / False",
+        short_answer_question: "Short Answer",
+        essay_question: "Essay",
+        numerical_question: "Numerical",
+        multiple_answers_question: "Multiple Answers",
+    };
+
+    let answersHtml = '';
+    if (questionType === 'essay_question') {
+        answersHtml = '<div id="nq-answers-container" style="display:none;"></div>';
+    } else if (questionType === 'true_false_question') {
+        answersHtml = `<div id="nq-answers-container">
+            <label style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">Select the correct answer</label>
+            <div id="nq-answers">
+                <div class="answer-row"><input type="radio" name="nq-correct" value="0" checked><input type="text" value="True" class="nq-answer" readonly></div>
+                <div class="answer-row"><input type="radio" name="nq-correct" value="1"><input type="text" value="False" class="nq-answer" readonly></div>
+            </div>
+        </div>`;
+    } else if (questionType === 'short_answer_question' || questionType === 'numerical_question') {
+        answersHtml = `<div id="nq-answers-container">
+            <label style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">Acceptable answer(s)</label>
+            <div id="nq-answers">
+                <div class="answer-row"><input type="text" placeholder="Correct answer" class="nq-answer"></div>
+            </div>
+            <button class="add-answer-btn" onclick="addAnswerRow()">+ Add alternative answer</button>
+        </div>`;
+    } else {
+        // multiple_choice or multiple_answers
+        const inputType = questionType === 'multiple_answers_question' ? 'checkbox' : 'radio';
+        answersHtml = `<div id="nq-answers-container">
+            <label style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">${questionType === 'multiple_answers_question' ? 'Answers (check all correct)' : 'Answers (select the correct one)'}</label>
+            <div id="nq-answers">
+                <div class="answer-row"><input type="${inputType}" name="nq-correct" value="0" checked><input type="text" placeholder="Answer A" class="nq-answer"></div>
+                <div class="answer-row"><input type="${inputType}" name="nq-correct" value="1"><input type="text" placeholder="Answer B" class="nq-answer"></div>
+                <div class="answer-row"><input type="${inputType}" name="nq-correct" value="2"><input type="text" placeholder="Answer C" class="nq-answer"></div>
+                <div class="answer-row"><input type="${inputType}" name="nq-correct" value="3"><input type="text" placeholder="Answer D" class="nq-answer"></div>
+            </div>
+            <button class="add-answer-btn" onclick="addAnswerRow()">+ Add another answer</button>
+        </div>`;
+    }
+
+    form.innerHTML = `
+        <div class="question-card" style="border-color: #A51C30;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h4 style="color: #A51C30; margin:0;">New ${typeLabels[questionType] || ''} Question</h4>
+                <button class="btn small secondary" onclick="showAddQuestion()" style="font-size:11px;">&#8592; Change Type</button>
+            </div>
+            <input type="hidden" id="nq-type" value="${questionType}">
+            <div class="form-group">
+                <label>Points</label>
+                <input type="number" class="form-input" id="nq-points" value="1" min="0" style="max-width:100px;">
             </div>
             <div class="form-group">
-                <label>Question Text</label>
-                <textarea class="form-input" id="nq-text" placeholder="Enter your question..."></textarea>
-            </div>
-            <div id="nq-answers-container">
-                <label style="font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">Answers (select the correct one)</label>
-                <div id="nq-answers">
-                    <div class="answer-row"><input type="radio" name="nq-correct" value="0" checked><input type="text" placeholder="Answer A" class="nq-answer"></div>
-                    <div class="answer-row"><input type="radio" name="nq-correct" value="1"><input type="text" placeholder="Answer B" class="nq-answer"></div>
-                    <div class="answer-row"><input type="radio" name="nq-correct" value="2"><input type="text" placeholder="Answer C" class="nq-answer"></div>
-                    <div class="answer-row"><input type="radio" name="nq-correct" value="3"><input type="text" placeholder="Answer D" class="nq-answer"></div>
+                <label>Question Text (HTML supported)</label>
+                <div class="desc-editor">
+                    <textarea class="form-input desc-editor-source" id="nq-text" style="min-height:80px;" placeholder="Enter your question..." oninput="document.getElementById('nq-preview').innerHTML = this.value || '';"></textarea>
+                    <div class="desc-editor-preview q-preview" id="nq-preview"></div>
                 </div>
-                <button class="add-answer-btn" onclick="addAnswerRow()">+ Add another answer</button>
             </div>
+            ${answersHtml}
             <div class="btn-group">
                 <button class="btn" onclick="submitQuestion()">Add Question</button>
                 <button class="btn secondary" onclick="document.getElementById('add-question-form').style.display='none'">Cancel</button>
@@ -1670,24 +1744,8 @@ function showAddQuestion() {
 }
 
 function updateAnswerForm() {
-    const type = document.getElementById("nq-type").value;
-    const container = document.getElementById("nq-answers-container");
-    if (type === "essay_question") {
-        container.style.display = "none";
-    } else if (type === "true_false_question") {
-        container.style.display = "block";
-        document.getElementById("nq-answers").innerHTML = `
-            <div class="answer-row"><input type="radio" name="nq-correct" value="0" checked><input type="text" value="True" class="nq-answer" readonly></div>
-            <div class="answer-row"><input type="radio" name="nq-correct" value="1"><input type="text" value="False" class="nq-answer" readonly></div>
-        `;
-    } else {
-        container.style.display = "block";
-        if (type === "short_answer_question" || type === "numerical_question") {
-            document.getElementById("nq-answers").innerHTML = `
-                <div class="answer-row"><input type="text" placeholder="Correct answer" class="nq-answer"></div>
-            `;
-        }
-    }
+    // Legacy function — type selection is now handled by showQuestionForm()
+    // Kept for compatibility but no longer called from the UI
 }
 
 function addAnswerRow() {
@@ -1695,7 +1753,14 @@ function addAnswerRow() {
     const idx = container.children.length;
     const row = document.createElement("div");
     row.className = "answer-row";
-    row.innerHTML = `<input type="radio" name="nq-correct" value="${idx}"><input type="text" placeholder="Answer ${String.fromCharCode(65 + idx)}" class="nq-answer">`;
+    const qType = document.getElementById("nq-type") ? document.getElementById("nq-type").value : "";
+    if (qType === "short_answer_question" || qType === "numerical_question") {
+        row.innerHTML = `<input type="text" placeholder="Alternative answer" class="nq-answer">`;
+    } else if (qType === "multiple_answers_question") {
+        row.innerHTML = `<input type="checkbox" name="nq-correct" value="${idx}"><input type="text" placeholder="Answer ${String.fromCharCode(65 + idx)}" class="nq-answer">`;
+    } else {
+        row.innerHTML = `<input type="radio" name="nq-correct" value="${idx}"><input type="text" placeholder="Answer ${String.fromCharCode(65 + idx)}" class="nq-answer">`;
+    }
     container.appendChild(row);
 }
 
@@ -1709,17 +1774,31 @@ async function submitQuestion() {
 
     if (type !== "essay_question") {
         const answerInputs = document.querySelectorAll(".nq-answer");
-        const correctRadio = document.querySelector('input[name="nq-correct"]:checked');
-        const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
         data.answers = [];
-        answerInputs.forEach((input, i) => {
-            if (input.value.trim()) {
-                data.answers.push({
-                    text: input.value.trim(),
-                    weight: (type === "short_answer_question" || type === "numerical_question") ? 100 : (i === correctIdx ? 100 : 0),
-                });
-            }
-        });
+        if (type === "multiple_answers_question") {
+            // Checkboxes: multiple correct
+            const checkedBoxes = document.querySelectorAll('input[name="nq-correct"]:checked');
+            const checkedIdxs = new Set([...checkedBoxes].map(cb => parseInt(cb.value)));
+            answerInputs.forEach((input, i) => {
+                if (input.value.trim()) {
+                    data.answers.push({
+                        text: input.value.trim(),
+                        weight: checkedIdxs.has(i) ? 100 : 0,
+                    });
+                }
+            });
+        } else {
+            const correctRadio = document.querySelector('input[name="nq-correct"]:checked');
+            const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
+            answerInputs.forEach((input, i) => {
+                if (input.value.trim()) {
+                    data.answers.push({
+                        text: input.value.trim(),
+                        weight: (type === "short_answer_question" || type === "numerical_question") ? 100 : (i === correctIdx ? 100 : 0),
+                    });
+                }
+            });
+        }
     }
 
     setStatus("Adding question...");
@@ -2708,10 +2787,8 @@ async function showSourceTab(tab, btn) {
             if (assignments.length === 0) content.innerHTML = '<div style="color:#666; padding:12px;">No assignments found.</div>';
         } catch (err) { content.innerHTML = `<div style="color:#A51C30; padding:12px;">${err.message}</div>`; }
     } else if (tab === 'local') {
-        content.innerHTML = `
-            <div style="margin-bottom:8px; font-size:13px; color:#666;">Enter file paths (one per line) from your local filesystem:</div>
-            <textarea class="form-input" id="source-local-paths" style="min-height:120px; font-family:monospace; font-size:12px;" placeholder="/path/to/file.pdf&#10;~/Desktop/notes.txt"></textarea>
-        `;
+        content.innerHTML = '<div style="padding:12px;"><span class="spinner"></span> Loading local files...</div>';
+        loadSourceLocalBrowser();
     } else if (tab === 'text') {
         content.innerHTML = `
             <div style="margin-bottom:8px; font-size:13px; color:#666;">Paste or type content (chapter references, topic descriptions, etc.):</div>
@@ -2722,7 +2799,7 @@ async function showSourceTab(tab, btn) {
 
 function confirmSourceSelection() {
     const newSources = [];
-    // Gather checked Canvas pages/assignments
+    // Gather checked Canvas pages/assignments/local files
     document.querySelectorAll('#source-tab-content input[type="checkbox"]:checked').forEach(cb => {
         const type = cb.dataset.type;
         const title = cb.dataset.title;
@@ -2730,18 +2807,10 @@ function confirmSourceSelection() {
             newSources.push({ type: 'canvas_page', url: cb.value, label: title });
         } else if (type === 'canvas_assignment') {
             newSources.push({ type: 'canvas_assignment', id: parseInt(cb.value), label: title });
+        } else if (type === 'local_file') {
+            newSources.push({ type: 'local_file', path: cb.value, label: title });
         }
     });
-    // Gather local file paths
-    const localPaths = document.getElementById("source-local-paths");
-    if (localPaths && localPaths.value.trim()) {
-        for (const line of localPaths.value.trim().split('\n')) {
-            const path = line.trim();
-            if (path) {
-                newSources.push({ type: 'local_file', path: path, label: path.split('/').pop() });
-            }
-        }
-    }
     // Gather free text
     const freeText = document.getElementById("source-free-text");
     if (freeText && freeText.value.trim()) {
@@ -2750,6 +2819,101 @@ function confirmSourceSelection() {
     }
     if (sourceModalCallback) sourceModalCallback(newSources);
     closeSourceModal();
+}
+
+
+// ── Source Local File Browser ────────────────────────
+let sourceLocalCurrentPath = "";
+
+async function loadSourceLocalBrowser(path) {
+    const content = document.getElementById("source-tab-content");
+    const url = path ? `/api/local/tree?path=${encodeURIComponent(path)}` : "/api/local/tree";
+    try {
+        const data = await api(url);
+        sourceLocalCurrentPath = data.path;
+        content.innerHTML = "";
+
+        // Navigation bar
+        const nav = document.createElement("div");
+        nav.style.cssText = "display:flex; align-items:center; gap:6px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #eee;";
+        nav.innerHTML = `
+            <button class="btn small secondary" style="padding:2px 8px; font-size:12px;" onclick="sourceLocalUp()" title="Parent directory">&#8593; Up</button>
+            <span style="font-size:12px; color:#888; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(data.path)}">${escapeHtml(data.path)}</span>
+        `;
+        content.appendChild(nav);
+
+        // File filter bar
+        const filterBar = document.createElement("div");
+        filterBar.style.cssText = "display:flex; gap:4px; margin-bottom:8px; flex-wrap:wrap;";
+        const filterTypes = { all: 'All', pdf: 'PDF', code: 'Code', docs: 'Docs', data: 'Data' };
+        for (const [key, label] of Object.entries(filterTypes)) {
+            const fbtn = document.createElement("button");
+            fbtn.className = 'file-filter-btn' + (key === 'all' ? ' active' : '');
+            fbtn.textContent = label;
+            fbtn.onclick = () => {
+                filterBar.querySelectorAll('.file-filter-btn').forEach(b => b.classList.remove('active'));
+                fbtn.classList.add('active');
+                filterSourceLocalFiles(key);
+            };
+            filterBar.appendChild(fbtn);
+        }
+        content.appendChild(filterBar);
+
+        // File list
+        const list = document.createElement("div");
+        list.className = "source-check-list";
+        list.id = "source-local-list";
+
+        if (data.children) {
+            const dirs = data.children.filter(c => c.type === "directory");
+            const files = data.children.filter(c => c.type === "file");
+
+            // Directories (click to navigate)
+            for (const d of dirs) {
+                const row = document.createElement("div");
+                row.className = "source-check-item";
+                row.style.cursor = "pointer";
+                row.innerHTML = `<span style="color:#d4a017;">&#128193;</span> <span style="flex:1;">${escapeHtml(d.name)}</span><span style="font-size:11px; color:#888;">${d.children ? d.children.length + ' items' : ''}</span>`;
+                row.onclick = () => loadSourceLocalBrowser(d.path);
+                list.appendChild(row);
+            }
+
+            // Files (checkbox to select)
+            for (const f of files) {
+                const row = document.createElement("label");
+                row.className = "source-check-item source-local-file-item";
+                row.dataset.filename = f.name.toLowerCase();
+                row.innerHTML = `<input type="checkbox" value="${escapeHtml(f.path)}" data-type="local_file" data-title="${escapeHtml(f.name)}"> <span style="width:16px; text-align:center;">${fileIcon(f.name)}</span> <span style="flex:1;">${escapeHtml(f.name)}</span><span style="font-size:11px; color:#888;">${f.size_display}</span>`;
+                list.appendChild(row);
+            }
+
+            if (dirs.length === 0 && files.length === 0) {
+                list.innerHTML = '<div style="color:#666; padding:12px;">Empty directory</div>';
+            }
+        }
+        content.appendChild(list);
+    } catch (err) {
+        content.innerHTML = `<div style="color:#A51C30; padding:12px;">Error loading directory: ${err.message}</div>`;
+    }
+}
+
+function sourceLocalUp() {
+    if (!sourceLocalCurrentPath) return;
+    const parent = sourceLocalCurrentPath.replace(/\/[^/]+\/?$/, '') || '/';
+    loadSourceLocalBrowser(parent);
+}
+
+function filterSourceLocalFiles(filterType) {
+    const items = document.querySelectorAll('#source-local-list .source-local-file-item');
+    items.forEach(item => {
+        if (filterType === 'all') {
+            item.style.display = '';
+        } else {
+            const name = item.dataset.filename || '';
+            const ext = '.' + name.split('.').pop();
+            item.style.display = fileMatchesFilter(name, filterType) ? '' : 'none';
+        }
+    });
 }
 
 
@@ -3192,6 +3356,245 @@ async function reviewAssignment(assignmentId) {
 
 
 // ══════════════════════════════════════════════════════
+// AI MACROS PANEL (left side of AI Assistant)
+// ══════════════════════════════════════════════════════
+async function loadAIMacros() {
+    const list = document.getElementById("ai-macros-list");
+    if (!list) return;
+    try {
+        const prompts = await api("/api/prompts");
+        list.innerHTML = "";
+        for (const [key, p] of Object.entries(prompts)) {
+            const div = document.createElement("div");
+            div.className = "macro-item";
+            div.innerHTML = `<div class="macro-name">${escapeHtml(p.name || key)}</div><div class="macro-desc">${escapeHtml(p.description || '')}</div>`;
+            div.onclick = () => runMacro(key, p);
+            list.appendChild(div);
+        }
+        if (Object.keys(prompts).length === 0) {
+            list.innerHTML = '<div style="padding:8px; color:#666; font-size:12px;">No prompt templates yet. Click the gear icon to add some.</div>';
+        }
+    } catch (err) {
+        list.innerHTML = `<div style="padding:8px; color:#A51C30; font-size:12px;">${err.message}</div>`;
+    }
+}
+
+function runMacro(key, promptDef) {
+    // Prompt the user for the variable part, then send to chat
+    const isGenerate = key.includes('generate');
+    const isReview = key.includes('review');
+
+    let userInput = "";
+    if (isGenerate) {
+        userInput = prompt(`${promptDef.name}\n\nEnter a topic or instructions:`);
+    } else if (isReview) {
+        userInput = prompt(`${promptDef.name}\n\nPaste or describe the content to review:`);
+    } else {
+        userInput = prompt(`${promptDef.name}\n\nEnter your input:`);
+    }
+    if (!userInput || !userInput.trim()) return;
+
+    // Fill the prompt template
+    let fullPrompt = promptDef.prompt;
+    fullPrompt = fullPrompt.replace('{topic}', userInput);
+    fullPrompt = fullPrompt.replace('{content}', userInput);
+    fullPrompt = fullPrompt.replace('{source_material}', 'Not provided.');
+    fullPrompt = fullPrompt.replace('{num_questions}', '5');
+    fullPrompt = fullPrompt.replace('{question_type}', 'multiple_choice_question');
+    fullPrompt = fullPrompt.replace('{points}', '1');
+
+    // Put into chat input and send
+    document.getElementById("chat-input").value = fullPrompt;
+    sendChat();
+}
+
+
+// ══════════════════════════════════════════════════════
+// AI GENERATE ASSIGNMENT
+// ══════════════════════════════════════════════════════
+function showAIGenerateAssignment() {
+    if (!currentCourseId) { setStatus("Select a course first", "error"); return; }
+    currentAssignmentId = null;
+    document.querySelectorAll("#assignment-list .list-item").forEach(el => el.classList.remove("selected"));
+
+    const editor = document.getElementById("assignment-editor");
+    editor.innerHTML = `
+        <div class="ai-gen-panel">
+            <h3>AI Assignment Generator</h3>
+            <div class="form-group">
+                <label>Topic / Instructions</label>
+                <textarea class="form-input" id="aigen-asgn-topic" placeholder="e.g., Write a problem set on orbital mechanics, covering Kepler's laws and escape velocity" style="min-height:80px;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Source Materials (optional)</label>
+                <div class="source-chips" id="aigen-asgn-sources"></div>
+                <button class="btn small secondary" style="margin-top:6px;" onclick="openSourceModal(addAIGenAsgnSources)">+ Add Sources</button>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Assignment Type</label>
+                    <select class="form-input" id="aigen-asgn-type">
+                        <option value="problem_set">Problem Set</option>
+                        <option value="essay">Essay</option>
+                        <option value="lab_report">Lab Report</option>
+                        <option value="project">Project</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Points Possible</label>
+                    <input type="number" class="form-input" id="aigen-asgn-points" value="100" min="0">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" id="aigen-asgn-btn" onclick="generateAssignment()">Generate Assignment</button>
+            </div>
+        </div>
+        <div id="aigen-asgn-results" style="margin-top:16px;"></div>
+    `;
+}
+
+let aiGenAsgnSources = [];
+
+function addAIGenAsgnSources(sources) {
+    aiGenAsgnSources = aiGenAsgnSources.concat(sources);
+    const container = document.getElementById("aigen-asgn-sources");
+    if (!container) return;
+    container.innerHTML = "";
+    aiGenAsgnSources.forEach((src, i) => {
+        const chip = document.createElement("span");
+        chip.className = "source-chip";
+        const typeIcon = src.type === 'canvas_page' ? '&#128196;' : src.type === 'canvas_assignment' ? '&#128203;' : src.type === 'local_file' ? '&#128187;' : '&#128221;';
+        chip.innerHTML = `${typeIcon} ${escapeHtml(src.label)} <span class="chip-remove" onclick="aiGenAsgnSources.splice(${i},1); addAIGenAsgnSources([]);">&times;</span>`;
+        container.appendChild(chip);
+    });
+}
+
+async function generateAssignment() {
+    const topic = document.getElementById("aigen-asgn-topic").value.trim();
+    if (!topic) { setStatus("Enter a topic or instructions", "error"); return; }
+
+    const btn = document.getElementById("aigen-asgn-btn");
+    btn.textContent = "Generating...";
+    btn.disabled = true;
+    setStatus("Generating assignment with AI...");
+
+    const results = document.getElementById("aigen-asgn-results");
+    results.innerHTML = '<div style="padding:20px; text-align:center;"><span class="spinner"></span> AI is generating the assignment...</div>';
+
+    try {
+        // Get source material
+        let sourceMaterial = "";
+        if (aiGenAsgnSources.length > 0) {
+            const srcResp = await api("/api/source-content", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sources: aiGenAsgnSources, course_id: currentCourseId }),
+            });
+            sourceMaterial = srcResp.content || "";
+        }
+
+        const asgnType = document.getElementById("aigen-asgn-type").value;
+        const points = document.getElementById("aigen-asgn-points").value;
+
+        const prompt = `You are creating a college-level assignment for a course.
+
+${sourceMaterial ? 'Source material:\n' + sourceMaterial + '\n\n' : ''}Assignment type: ${asgnType}
+Points: ${points}
+Topic/Instructions from instructor: ${topic}
+
+Generate a complete assignment with:
+1. A clear, concise title
+2. Detailed instructions for students in HTML format
+3. Grading criteria or rubric outline
+
+Return ONLY valid JSON (no markdown fences) in this format:
+{"title": "Assignment title", "description": "<p>HTML instructions...</p>", "points_possible": ${points}}`;
+
+        const resp = await api("/api/ai/quiz-generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt }),
+        });
+
+        if (resp.success && resp.data) {
+            const data = resp.data;
+            results.innerHTML = `
+                <div class="assignment-card">
+                    <h3 style="margin-bottom:16px;">Generated Assignment Preview</h3>
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" class="form-input" id="aigen-asgn-title" value="${escapeHtml(data.title || 'Generated Assignment')}">
+                    </div>
+                    <div class="form-group">
+                        <label>Description (HTML source &amp; preview)</label>
+                        <div class="desc-editor">
+                            <textarea class="form-input desc-editor-source" id="aigen-asgn-desc" oninput="document.getElementById('aigen-asgn-preview').innerHTML = this.value;" style="min-height:200px;">${data.description || ''}</textarea>
+                            <div class="desc-editor-preview" id="aigen-asgn-preview">${data.description || ''}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Points</label>
+                            <input type="number" class="form-input" id="aigen-asgn-pts" value="${data.points_possible || points}" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Submission Type</label>
+                            <select class="form-input" id="aigen-asgn-subtype">
+                                <option value="online_upload">File Upload</option>
+                                <option value="online_text_entry">Text Entry</option>
+                                <option value="online_url">URL</option>
+                                <option value="on_paper">On Paper</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn success" onclick="createDraftAssignment()">Create Draft Assignment in Canvas</button>
+                        <button class="btn secondary" onclick="generateAssignment()">Regenerate</button>
+                    </div>
+                </div>
+            `;
+            setStatus("Assignment generated — review and edit before creating", "success");
+        } else {
+            results.innerHTML = `<div style="padding:16px; color:#A51C30;">Generation failed: ${escapeHtml(resp.error || 'Unknown error')}</div>`;
+        }
+    } catch (err) {
+        results.innerHTML = `<div style="padding:16px; color:#A51C30;">Error: ${escapeHtml(err.message)}</div>`;
+        setStatus("Assignment generation failed", "error");
+    }
+    btn.textContent = "Generate Assignment";
+    btn.disabled = false;
+}
+
+async function createDraftAssignment() {
+    if (!currentCourseId) { setStatus("Select a course first", "error"); return; }
+    const title = document.getElementById("aigen-asgn-title").value;
+    const description = document.getElementById("aigen-asgn-desc").value;
+    const points = parseFloat(document.getElementById("aigen-asgn-pts").value) || 0;
+    const subType = document.getElementById("aigen-asgn-subtype").value;
+
+    setStatus("Creating draft assignment in Canvas...");
+    try {
+        const result = await api(`/api/canvas/course/${currentCourseId}/assignments`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: title,
+                description: description,
+                points_possible: points,
+                submission_types: [subType],
+            }),
+        });
+        setStatus(`Created draft assignment: ${result.assignment.name}`, "success");
+        loadAssignmentList();
+        loadAssignmentEditor(result.assignment.id);
+    } catch (err) {
+        setStatus(`Error: ${err.message}`, "error");
+    }
+}
+
+
+// ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
 async function init() {
@@ -3222,6 +3625,7 @@ async function init() {
         }
     };
     loadLocalTree();
+    loadAIMacros();
     setStatus("Ready");
 }
 
