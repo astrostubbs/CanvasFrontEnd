@@ -86,8 +86,10 @@ def api_config():
 def local_tree():
     """Return local directory tree as nested JSON."""
     root = request.args.get("path", LOCAL_ROOT)
-    # Security: only allow paths under LOCAL_ROOT or home
+    root = os.path.expanduser(root)
     root = os.path.realpath(root)
+    if not os.path.isdir(root):
+        return jsonify({"error": f"Not a directory: {root}"}), 400
     return jsonify(build_local_tree(root, depth=0, max_depth=3))
 
 
@@ -124,6 +126,7 @@ def build_local_tree(path, depth, max_depth):
 def local_expand():
     """Expand a single directory (lazy loading)."""
     path = request.args.get("path", "")
+    path = os.path.expanduser(path)
     path = os.path.realpath(path)
     return jsonify(build_local_tree(path, depth=0, max_depth=1))
 

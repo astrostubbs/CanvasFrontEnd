@@ -301,7 +301,10 @@ select.form-input { cursor: pointer; }
             <div class="panel" id="local-panel">
                 <div class="panel-header">
                     <span class="icon">&#128187;</span> Local Files
-                    <span class="path" id="local-path"></span>
+                    <button class="btn small secondary" style="padding:2px 8px; font-size:12px; margin-left:8px;" onclick="navigateLocalUp()" title="Go to parent directory">&#8593; Up</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-size:12px;" onclick="navigateLocalHome()" title="Go to home directory">&#127968; Home</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-size:12px;" onclick="navigateLocalDesktop()" title="Go to Desktop">&#128421; Desktop</button>
+                    <span class="path" id="local-path" style="cursor:pointer;" onclick="promptLocalPath()" title="Click to enter a path"></span>
                 </div>
                 <div class="file-filter-bar" id="local-filter-bar"></div>
                 <div class="panel-body" id="local-tree">
@@ -865,11 +868,39 @@ async function showSyllabus(courseId) {
 // ══════════════════════════════════════════════════════
 // FILES TAB — Local + Canvas file browser
 // ══════════════════════════════════════════════════════
-async function loadLocalTree() {
-    const data = await api("/api/local/tree");
+let currentLocalPath = "";
+
+async function loadLocalTree(path) {
+    const url = path ? `/api/local/tree?path=${encodeURIComponent(path)}` : "/api/local/tree";
+    const data = await api(url);
+    currentLocalPath = data.path;
     document.getElementById("local-path").textContent = data.path;
     document.getElementById("local-tree").innerHTML = "";
     document.getElementById("local-tree").appendChild(renderLocalTree(data));
+    // Re-apply active filter
+    if (currentLocalFilter !== 'all') {
+        const btn = document.querySelector(`#local-filter-bar .file-filter-btn[data-filter="${currentLocalFilter}"]`);
+        if (btn) filterLocalFiles(currentLocalFilter, btn);
+    }
+}
+
+function navigateLocalUp() {
+    if (!currentLocalPath) return;
+    const parent = currentLocalPath.replace(/\/[^/]+\/?$/, '') || '/';
+    loadLocalTree(parent);
+}
+
+function navigateLocalHome() {
+    loadLocalTree('~');
+}
+
+function navigateLocalDesktop() {
+    loadLocalTree('~/Desktop');
+}
+
+function promptLocalPath() {
+    const newPath = prompt("Enter local directory path:", currentLocalPath);
+    if (newPath && newPath.trim()) loadLocalTree(newPath.trim());
 }
 
 function renderLocalTree(node) {
@@ -885,10 +916,13 @@ function renderLocalTree(node) {
             if (child.type === "directory") {
                 div.innerHTML = `<span class="icon">&#128193;</span><span class="name">${child.name}</span><span class="meta">${child.children ? child.children.length + " items" : ""}</span>`;
                 div.onclick = (e) => { e.stopPropagation(); const sub = li.querySelector(":scope > ul"); if (sub) sub.style.display = sub.style.display === "none" ? "" : "none"; };
+                div.ondblclick = (e) => { e.stopPropagation(); loadLocalTree(child.path); };
+                div.title = "Click to expand, double-click to navigate into";
                 li.appendChild(div);
                 if (child.children && child.children.length > 0) li.appendChild(renderLocalTree(child));
                 else if (child.truncated) {
                     div.onclick = async (e) => { e.stopPropagation(); const expanded = await api(`/api/local/expand?path=${encodeURIComponent(child.path)}`); const sub = renderLocalTree(expanded); li.appendChild(sub); div.onclick = (e2) => { e2.stopPropagation(); sub.style.display = sub.style.display === "none" ? "" : "none"; }; };
+                    div.ondblclick = (e) => { e.stopPropagation(); loadLocalTree(child.path); };
                 }
             } else {
                 div.innerHTML = `<span class="icon">${fileIcon(child.name)}</span><span class="name">${child.name}</span><span class="meta">${child.size_display}</span>`;
