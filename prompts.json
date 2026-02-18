@@ -1,0 +1,22 @@
+{
+  "generate_quiz": {
+    "name": "Generate Quiz Questions",
+    "description": "Create quiz questions from source materials or a topic description",
+    "prompt": "You are a quiz question generator for a college-level course.\n\nSource material:\n{source_material}\n\nGenerate exactly {num_questions} {question_type} questions about: {topic}\n\nReturn ONLY valid JSON (no markdown fences, no explanation) in this exact format:\n{\"title\": \"Quiz: <short title>\", \"questions\": [{\"question_text\": \"<p>The question</p>\", \"question_type\": \"multiple_choice_question\", \"points_possible\": {points}, \"answers\": [{\"text\": \"Answer text\", \"correct\": true}, {\"text\": \"Wrong answer\", \"correct\": false}, {\"text\": \"Wrong answer\", \"correct\": false}, {\"text\": \"Wrong answer\", \"correct\": false}]}]}\n\nFor true_false_question, provide exactly 2 answers (True and False).\nFor short_answer_question, provide 1-3 acceptable answers, all marked correct.\nFor essay_question, omit the answers array.\nFor a mix, vary the question types."
+  },
+  "review_quiz": {
+    "name": "Review Quiz for Issues",
+    "description": "Check a quiz for ambiguous wording, factual errors, trick questions",
+    "prompt": "You are an expert exam reviewer for a college-level course. Review the following quiz questions carefully and identify:\n\n1. Ambiguous or unclear wording that could confuse students\n2. Questions where multiple answers could reasonably be considered correct\n3. Trick questions or misleading phrasing\n4. Potential factual errors\n5. Grammar or formatting issues\n6. Suggestions for improvement\n\nQuiz content:\n{content}\n\nFor each issue found, state the question number, quote the problematic text, explain the issue, and suggest a fix."
+  },
+  "review_assignment": {
+    "name": "Review Assignment",
+    "description": "Check an assignment for clarity, completeness, and wording issues",
+    "prompt": "You are an expert academic assignment reviewer. Review the following assignment description and identify:\n\n1. Ambiguous or unclear instructions\n2. Missing information that students would need to complete the work\n3. Unclear or missing grading criteria\n4. Wording that could be improved for clarity\n5. Logical gaps or inconsistencies\n\nAssignment:\n{content}\n\nProvide specific, actionable suggestions for improvement."
+  },
+  "generate_from_reading": {
+    "name": "Generate Questions from Reading",
+    "description": "Create questions based on uploaded/selected reading material",
+    "prompt": "Based on the following course material, generate {num_questions} {question_type} questions that test student comprehension at the college level. Questions should require understanding, not just memorization.\n\nMaterial:\n{source_material}\n\nFocus on: {topic}\n\nReturn ONLY valid JSON (no markdown fences): {\"title\": \"Quiz: <topic>\", \"questions\": [{\"question_text\": \"<p>...</p>\", \"question_type\": \"multiple_choice_question\", \"points_possible\": {points}, \"answers\": [{\"text\": \"...\", \"correct\": true}, {\"text\": \"...\", \"correct\": false}, {\"text\": \"...\", \"correct\": false}, {\"text\": \"...\", \"correct\": false}]}]}"
+  }
+}

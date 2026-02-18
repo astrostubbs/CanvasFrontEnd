@@ -257,6 +257,43 @@ select.form-input { cursor: pointer; }
 .resizer-col::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 1px; height: 30px; background: #999; border-radius: 1px; }
 .resizer-col:hover::after, .resizer-col.active::after { background: #fff; }
 
+/* ── Prompt Editor Modal ─────────────────────────── */
+.prompt-modal { max-width: 800px; min-width: 600px; max-height: 80vh; display: flex; flex-direction: column; }
+.prompt-list { width: 200px; border-right: 1px solid #e0e0e0; overflow-y: auto; flex-shrink: 0; }
+.prompt-item { padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #eee; color: #333; }
+.prompt-item:hover { background: #f5f5f5; }
+.prompt-item.active { background: #fce4e8; color: #A51C30; font-weight: 600; }
+.prompt-detail { flex: 1; padding: 16px; overflow-y: auto; }
+
+/* ── Source Material Chips ───────────────────────── */
+.source-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; min-height: 28px; }
+.source-chip { display: inline-flex; align-items: center; gap: 4px; background: #f0f0f0; border: 1px solid #ddd; padding: 4px 10px; border-radius: 16px; font-size: 12px; color: #333; }
+.source-chip .chip-remove { cursor: pointer; color: #999; font-weight: 700; margin-left: 4px; font-size: 14px; line-height: 1; }
+.source-chip .chip-remove:hover { color: #A51C30; }
+
+/* ── AI Generate Panel ───────────────────────────── */
+.ai-gen-panel { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; }
+.ai-gen-panel h3 { color: #A51C30; margin-bottom: 16px; }
+
+/* ── AI Review Panel ─────────────────────────────── */
+.ai-review-panel { background: #fffbf0; border: 1px solid #f0c040; border-radius: 8px; padding: 16px; margin-top: 16px; }
+.ai-review-panel h4 { color: #d97706; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.ai-review-panel .review-content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+
+/* ── Gear Button ─────────────────────────────────── */
+.gear-btn { background: none; border: none; color: rgba(255,255,255,0.7); font-size: 20px; cursor: pointer; padding: 4px 8px; }
+.gear-btn:hover { color: #fff; }
+
+/* ── Source Modal Tabs ───────────────────────────── */
+.source-tab-btns { display: flex; gap: 4px; margin-bottom: 12px; }
+.source-tab-btn { padding: 6px 14px; border: 1px solid #ddd; background: #fff; color: #666; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.source-tab-btn:hover { border-color: #A51C30; color: #A51C30; }
+.source-tab-btn.active { background: #A51C30; color: #fff; border-color: #A51C30; }
+.source-check-list { max-height: 300px; overflow-y: auto; }
+.source-check-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; font-size: 13px; }
+.source-check-item:hover { background: #f5f5f5; }
+.source-check-item input[type="checkbox"] { accent-color: #A51C30; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: #f5f5f5; }
@@ -270,6 +307,7 @@ select.form-input { cursor: pointer; }
     <img src="/HarvardLogo.png" alt="Harvard FAS" class="harvard-logo">
     <h1>Canvas Course Manager</h1>
     <select id="course-select"><option value="">Loading courses...</option></select>
+    <button class="gear-btn" onclick="openPromptEditor()" title="Edit AI prompt templates">&#9881;</button>
     <div class="header-info" id="header-info"></div>
 </header>
 
@@ -354,6 +392,7 @@ select.form-input { cursor: pointer; }
                 <div class="editor-sidebar-header">
                     <span>Quizzes</span>
                     <button class="btn small" onclick="showNewQuizForm()">+ New</button>
+                    <button class="btn small secondary" onclick="showAIGenerateQuiz()" title="Generate quiz questions with AI">AI Generate</button>
                 </div>
                 <div class="editor-sidebar-list" id="quiz-list">
                     <div style="padding: 12px; color: #666; font-size: 14px;">Select a course first</div>
@@ -526,6 +565,45 @@ Or type inline LaTeX with $...$ delimiters and click 'Convert All $...$':
         <div id="syllabus-content" style="font-size: 14px; line-height: 1.6;"></div>
         <div style="margin-top: 16px;">
             <button class="btn secondary" onclick="document.getElementById('syllabus-modal').classList.remove('active')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Prompt editor modal -->
+<div class="modal-overlay" id="prompt-modal">
+    <div class="modal prompt-modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="margin:0;">Prompt Templates</h3>
+            <div style="display:flex; gap:8px;">
+                <button class="btn small" onclick="addNewPrompt()">+ New Prompt</button>
+                <button class="btn small secondary" onclick="closePromptEditor()">Close</button>
+            </div>
+        </div>
+        <div style="display:flex; flex:1; overflow:hidden; border:1px solid #e0e0e0; border-radius:4px; min-height:300px;">
+            <div class="prompt-list" id="prompt-list"></div>
+            <div class="prompt-detail" id="prompt-detail">
+                <div style="color:#666; padding:20px;">Select a prompt template from the list.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Source selection modal -->
+<div class="modal-overlay" id="source-modal">
+    <div class="modal" style="max-width:600px; max-height:70vh; display:flex; flex-direction:column;">
+        <h3>Add Source Material</h3>
+        <div class="source-tab-btns">
+            <button class="source-tab-btn active" onclick="showSourceTab('canvas', this)">Canvas Pages</button>
+            <button class="source-tab-btn" onclick="showSourceTab('assignments', this)">Assignments</button>
+            <button class="source-tab-btn" onclick="showSourceTab('local', this)">Local Files</button>
+            <button class="source-tab-btn" onclick="showSourceTab('text', this)">Free Text</button>
+        </div>
+        <div id="source-tab-content" style="flex:1; overflow-y:auto; min-height:200px; border:1px solid #e0e0e0; border-radius:4px; padding:12px;">
+            <div style="padding:20px; color:#666;">Loading...</div>
+        </div>
+        <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
+            <button class="btn" onclick="confirmSourceSelection()">Add Selected</button>
+            <button class="btn secondary" onclick="closeSourceModal()">Cancel</button>
         </div>
     </div>
 </div>
@@ -1152,6 +1230,7 @@ async function loadAssignmentEditor(assignmentId) {
                     <h3 style="margin:0;">Edit Assignment</h3>
                     <div class="btn-group" style="margin:0;">
                         <button class="btn small success" id="asgn-save-btn" onclick="saveAssignment(${a.id})" style="display:none;">Save Changes</button>
+                        <button class="btn small secondary" onclick="reviewAssignment(${a.id})" title="AI review for clarity issues">AI Review</button>
                         <button class="btn small ${a.published ? 'secondary' : 'success'}" onclick="toggleAssignmentPublish(${a.id}, ${!a.published})">${a.published ? 'Unpublish' : 'Publish'}</button>
                         <a class="btn small secondary" href="${a.html_url}" target="_blank" style="text-decoration:none; display:inline-block; text-align:center;">Open in Canvas</a>
                         <button class="btn small danger" onclick="deleteAssignment(${a.id})">Delete</button>
@@ -1386,6 +1465,7 @@ async function loadQuizEditor(quizId) {
             <h3 style="color: #A51C30;">Questions (${questions.length})</h3>
             <div class="btn-group" style="margin:0;">
                 <button class="btn small" onclick="showAddQuestion()">+ Add Question</button>
+                <button class="btn small secondary" onclick="reviewQuiz()" title="AI review for wording issues">AI Review</button>
                 <button class="btn small success" onclick="publishQuiz(true)">Publish</button>
                 <a class="btn small secondary" href="https://harvard.beta.instructure.com/courses/${currentCourseId}/quizzes/${quizId}" target="_blank" style="text-decoration:none; display:inline-block; text-align:center;">Open in Canvas</a>
             </div>
@@ -2477,6 +2557,637 @@ async function sendChat() {
     sendBtn.disabled = false;
     sendBtn.textContent = "Send";
     messages.scrollTop = messages.scrollHeight;
+}
+
+
+// ══════════════════════════════════════════════════════
+// PROMPT EDITOR
+// ══════════════════════════════════════════════════════
+let cachedPrompts = {};
+
+async function openPromptEditor() {
+    document.getElementById("prompt-modal").classList.add("active");
+    try {
+        cachedPrompts = await api("/api/prompts");
+        renderPromptList();
+    } catch (err) {
+        document.getElementById("prompt-list").innerHTML = `<div style="padding:12px; color:#A51C30;">${err.message}</div>`;
+    }
+}
+
+function closePromptEditor() {
+    document.getElementById("prompt-modal").classList.remove("active");
+}
+
+function renderPromptList() {
+    const list = document.getElementById("prompt-list");
+    list.innerHTML = "";
+    for (const [key, p] of Object.entries(cachedPrompts)) {
+        const div = document.createElement("div");
+        div.className = "prompt-item";
+        div.dataset.key = key;
+        div.textContent = p.name || key;
+        div.onclick = () => selectPrompt(key);
+        list.appendChild(div);
+    }
+}
+
+function selectPrompt(key) {
+    const p = cachedPrompts[key];
+    if (!p) return;
+    document.querySelectorAll(".prompt-item").forEach(el => el.classList.toggle("active", el.dataset.key === key));
+    const detail = document.getElementById("prompt-detail");
+    detail.innerHTML = `
+        <div class="form-group">
+            <label>Template Key</label>
+            <input type="text" class="form-input" value="${escapeHtml(key)}" disabled style="background:#f0f0f0;">
+        </div>
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" class="form-input" id="pe-name" value="${escapeHtml(p.name || '')}">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" class="form-input" id="pe-desc" value="${escapeHtml(p.description || '')}">
+        </div>
+        <div class="form-group">
+            <label>Prompt Template</label>
+            <textarea class="form-input" id="pe-prompt" style="min-height:200px; font-family:monospace; font-size:12px;">${p.prompt || ''}</textarea>
+        </div>
+        <div style="font-size:11px; color:#888; margin-bottom:12px;">
+            Available placeholders: <code>{source_material}</code>, <code>{topic}</code>, <code>{num_questions}</code>, <code>{question_type}</code>, <code>{points}</code>, <code>{content}</code>
+        </div>
+        <div class="btn-group">
+            <button class="btn" onclick="savePromptEdit('${key}')">Save</button>
+            <button class="btn danger small" onclick="deletePromptTemplate('${key}')">Delete</button>
+        </div>
+    `;
+}
+
+async function savePromptEdit(key) {
+    try {
+        await api(`/api/prompts/${key}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: document.getElementById("pe-name").value,
+                description: document.getElementById("pe-desc").value,
+                prompt: document.getElementById("pe-prompt").value,
+            }),
+        });
+        cachedPrompts[key] = {
+            name: document.getElementById("pe-name").value,
+            description: document.getElementById("pe-desc").value,
+            prompt: document.getElementById("pe-prompt").value,
+        };
+        setStatus("Prompt template saved", "success");
+        renderPromptList();
+        selectPrompt(key);
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+async function deletePromptTemplate(key) {
+    if (!confirm(`Delete prompt template "${key}"?`)) return;
+    try {
+        await api(`/api/prompts/${key}`, { method: "DELETE" });
+        delete cachedPrompts[key];
+        renderPromptList();
+        document.getElementById("prompt-detail").innerHTML = '<div style="color:#666; padding:20px;">Template deleted. Select another.</div>';
+        setStatus("Prompt template deleted", "success");
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+function addNewPrompt() {
+    const key = prompt("Enter a key for the new prompt template (e.g., 'review_rubric'):");
+    if (!key || !key.trim()) return;
+    const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    cachedPrompts[cleanKey] = { name: cleanKey, description: "", prompt: "" };
+    renderPromptList();
+    selectPrompt(cleanKey);
+}
+
+
+// ══════════════════════════════════════════════════════
+// SOURCE MATERIAL SELECTION
+// ══════════════════════════════════════════════════════
+let selectedSources = [];
+let sourceModalCallback = null;
+
+function openSourceModal(callback) {
+    sourceModalCallback = callback;
+    document.getElementById("source-modal").classList.add("active");
+    showSourceTab('canvas', document.querySelector('.source-tab-btn'));
+}
+
+function closeSourceModal() {
+    document.getElementById("source-modal").classList.remove("active");
+    sourceModalCallback = null;
+}
+
+async function showSourceTab(tab, btn) {
+    document.querySelectorAll('.source-tab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const content = document.getElementById("source-tab-content");
+
+    if (tab === 'canvas') {
+        content.innerHTML = '<div style="padding:12px;"><span class="spinner"></span> Loading pages...</div>';
+        try {
+            const pages = await api(`/api/canvas/course/${currentCourseId}/pages`);
+            content.innerHTML = '<div class="source-check-list">' +
+                pages.map(p => `<label class="source-check-item"><input type="checkbox" value="${p.url}" data-type="canvas_page" data-title="${escapeHtml(p.title)}"> ${escapeHtml(p.title)}</label>`).join('') +
+                '</div>';
+            if (pages.length === 0) content.innerHTML = '<div style="color:#666; padding:12px;">No pages found.</div>';
+        } catch (err) { content.innerHTML = `<div style="color:#A51C30; padding:12px;">${err.message}</div>`; }
+    } else if (tab === 'assignments') {
+        content.innerHTML = '<div style="padding:12px;"><span class="spinner"></span> Loading assignments...</div>';
+        try {
+            const assignments = await api(`/api/canvas/course/${currentCourseId}/assignments`);
+            content.innerHTML = '<div class="source-check-list">' +
+                assignments.map(a => `<label class="source-check-item"><input type="checkbox" value="${a.id}" data-type="canvas_assignment" data-title="${escapeHtml(a.name)}"> ${escapeHtml(a.name)}</label>`).join('') +
+                '</div>';
+            if (assignments.length === 0) content.innerHTML = '<div style="color:#666; padding:12px;">No assignments found.</div>';
+        } catch (err) { content.innerHTML = `<div style="color:#A51C30; padding:12px;">${err.message}</div>`; }
+    } else if (tab === 'local') {
+        content.innerHTML = `
+            <div style="margin-bottom:8px; font-size:13px; color:#666;">Enter file paths (one per line) from your local filesystem:</div>
+            <textarea class="form-input" id="source-local-paths" style="min-height:120px; font-family:monospace; font-size:12px;" placeholder="/path/to/file.pdf&#10;~/Desktop/notes.txt"></textarea>
+        `;
+    } else if (tab === 'text') {
+        content.innerHTML = `
+            <div style="margin-bottom:8px; font-size:13px; color:#666;">Paste or type content (chapter references, topic descriptions, etc.):</div>
+            <textarea class="form-input" id="source-free-text" style="min-height:150px;" placeholder="Chapter 3: Stellar Evolution&#10;Focus on HR diagram, main sequence lifetimes, and post-main-sequence evolution."></textarea>
+        `;
+    }
+}
+
+function confirmSourceSelection() {
+    const newSources = [];
+    // Gather checked Canvas pages/assignments
+    document.querySelectorAll('#source-tab-content input[type="checkbox"]:checked').forEach(cb => {
+        const type = cb.dataset.type;
+        const title = cb.dataset.title;
+        if (type === 'canvas_page') {
+            newSources.push({ type: 'canvas_page', url: cb.value, label: title });
+        } else if (type === 'canvas_assignment') {
+            newSources.push({ type: 'canvas_assignment', id: parseInt(cb.value), label: title });
+        }
+    });
+    // Gather local file paths
+    const localPaths = document.getElementById("source-local-paths");
+    if (localPaths && localPaths.value.trim()) {
+        for (const line of localPaths.value.trim().split('\n')) {
+            const path = line.trim();
+            if (path) {
+                newSources.push({ type: 'local_file', path: path, label: path.split('/').pop() });
+            }
+        }
+    }
+    // Gather free text
+    const freeText = document.getElementById("source-free-text");
+    if (freeText && freeText.value.trim()) {
+        const text = freeText.value.trim();
+        newSources.push({ type: 'text', content: text, label: text.substring(0, 40) + (text.length > 40 ? '...' : '') });
+    }
+    if (sourceModalCallback) sourceModalCallback(newSources);
+    closeSourceModal();
+}
+
+
+// ══════════════════════════════════════════════════════
+// AI QUIZ GENERATOR
+// ══════════════════════════════════════════════════════
+let aiGenSources = [];
+let generatedQuestions = [];
+let generatedTitle = "";
+
+function showAIGenerateQuiz() {
+    if (!currentCourseId) { setStatus("Select a course first", "error"); return; }
+    aiGenSources = [];
+    generatedQuestions = [];
+    generatedTitle = "";
+    currentQuizId = null;
+    document.querySelectorAll("#quiz-list .list-item").forEach(el => el.classList.remove("selected"));
+
+    const editor = document.getElementById("quiz-editor");
+    editor.innerHTML = `
+        <div class="ai-gen-panel">
+            <h3>AI Quiz Generator</h3>
+            <div class="form-group">
+                <label>Topic / Instructions</label>
+                <textarea class="form-input" id="aigen-topic" placeholder="e.g., Stellar evolution, focusing on the HR diagram and main sequence lifetimes" style="min-height:60px;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Source Materials (optional)</label>
+                <div class="source-chips" id="aigen-sources"></div>
+                <button class="btn small secondary" style="margin-top:6px;" onclick="openSourceModal(addAIGenSources)">+ Add Sources</button>
+            </div>
+            <div class="form-group">
+                <label>Prompt Template</label>
+                <select class="form-input" id="aigen-prompt-template">
+                    <option value="generate_quiz">Generate Quiz Questions</option>
+                    <option value="generate_from_reading">Generate from Reading</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Number of Questions</label>
+                    <input type="number" class="form-input" id="aigen-num" value="5" min="1" max="30">
+                </div>
+                <div class="form-group">
+                    <label>Question Type</label>
+                    <select class="form-input" id="aigen-type">
+                        <option value="multiple_choice_question">Multiple Choice</option>
+                        <option value="true_false_question">True / False</option>
+                        <option value="short_answer_question">Short Answer</option>
+                        <option value="essay_question">Essay</option>
+                        <option value="mix">Mix</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Points Each</label>
+                    <input type="number" class="form-input" id="aigen-points" value="1" min="0" step="0.5">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" id="aigen-btn" onclick="generateQuiz()">Generate Questions</button>
+            </div>
+        </div>
+        <div id="aigen-results" style="margin-top:16px;"></div>
+    `;
+    // Load prompt template options dynamically
+    loadPromptTemplateOptions();
+}
+
+async function loadPromptTemplateOptions() {
+    try {
+        const prompts = await api("/api/prompts");
+        const select = document.getElementById("aigen-prompt-template");
+        if (!select) return;
+        select.innerHTML = "";
+        for (const [key, p] of Object.entries(prompts)) {
+            if (p.prompt && (p.prompt.includes('{num_questions}') || p.prompt.includes('{source_material}'))) {
+                const opt = document.createElement("option");
+                opt.value = key;
+                opt.textContent = p.name || key;
+                select.appendChild(opt);
+            }
+        }
+    } catch (err) { /* use defaults */ }
+}
+
+function addAIGenSources(sources) {
+    aiGenSources = aiGenSources.concat(sources);
+    renderAIGenSourceChips();
+}
+
+function renderAIGenSourceChips() {
+    const container = document.getElementById("aigen-sources");
+    if (!container) return;
+    container.innerHTML = "";
+    aiGenSources.forEach((src, i) => {
+        const chip = document.createElement("span");
+        chip.className = "source-chip";
+        const typeIcon = src.type === 'canvas_page' ? '&#128196;' : src.type === 'canvas_assignment' ? '&#128203;' : src.type === 'local_file' ? '&#128187;' : '&#128221;';
+        chip.innerHTML = `${typeIcon} ${escapeHtml(src.label)} <span class="chip-remove" onclick="removeAIGenSource(${i})">&times;</span>`;
+        container.appendChild(chip);
+    });
+}
+
+function removeAIGenSource(idx) {
+    aiGenSources.splice(idx, 1);
+    renderAIGenSourceChips();
+}
+
+async function generateQuiz() {
+    const topic = document.getElementById("aigen-topic").value.trim();
+    if (!topic) { setStatus("Enter a topic or instructions", "error"); return; }
+
+    const btn = document.getElementById("aigen-btn");
+    btn.textContent = "Generating...";
+    btn.disabled = true;
+    setStatus("Generating quiz questions with AI...");
+
+    const results = document.getElementById("aigen-results");
+    results.innerHTML = '<div style="padding:20px; text-align:center;"><span class="spinner"></span> AI is generating questions... this may take a moment.</div>';
+
+    try {
+        // Get source material text if we have sources
+        let sourceMaterial = "";
+        if (aiGenSources.length > 0) {
+            const srcResp = await api("/api/source-content", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sources: aiGenSources, course_id: currentCourseId }),
+            });
+            sourceMaterial = srcResp.content || "";
+        }
+
+        // Build the prompt from template
+        const templateKey = document.getElementById("aigen-prompt-template").value;
+        const prompts = await api("/api/prompts");
+        const template = prompts[templateKey];
+        if (!template) throw new Error("Prompt template not found");
+
+        const numQ = document.getElementById("aigen-num").value;
+        const qType = document.getElementById("aigen-type").value;
+        const pts = document.getElementById("aigen-points").value;
+
+        let fullPrompt = template.prompt
+            .replace('{source_material}', sourceMaterial || 'No specific source material provided.')
+            .replace('{topic}', topic)
+            .replace('{num_questions}', numQ)
+            .replace('{question_type}', qType === 'mix' ? 'mixed (vary question types)' : qType)
+            .replace('{points}', pts);
+
+        // Call AI quiz generate endpoint
+        const resp = await api("/api/ai/quiz-generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: fullPrompt }),
+        });
+
+        if (resp.success && resp.data) {
+            generatedTitle = resp.data.title || `Quiz: ${topic}`;
+            generatedQuestions = (resp.data.questions || []).map((q, i) => ({
+                question_text: q.question_text || '',
+                question_type: q.question_type || 'multiple_choice_question',
+                points_possible: q.points_possible || parseFloat(pts),
+                answers: (q.answers || []).map(a => ({
+                    text: a.text || '',
+                    correct: a.correct || false,
+                    weight: a.correct ? 100 : 0,
+                })),
+            }));
+            renderGeneratedQuiz();
+            setStatus(`Generated ${generatedQuestions.length} questions`, "success");
+        } else {
+            results.innerHTML = `<div style="padding:16px; color:#A51C30;">
+                <p><strong>Generation failed:</strong> ${escapeHtml(resp.error || 'Unknown error')}</p>
+                ${resp.raw ? '<pre style="background:#f5f5f5; padding:12px; border-radius:4px; font-size:12px; max-height:200px; overflow:auto; margin-top:8px;">' + escapeHtml(resp.raw) + '</pre>' : ''}
+            </div>`;
+        }
+    } catch (err) {
+        results.innerHTML = `<div style="padding:16px; color:#A51C30;">Error: ${escapeHtml(err.message)}</div>`;
+        setStatus("Quiz generation failed", "error");
+    }
+
+    btn.textContent = "Generate Questions";
+    btn.disabled = false;
+}
+
+function renderGeneratedQuiz() {
+    const results = document.getElementById("aigen-results");
+    const typeLabels = {
+        multiple_choice_question: "Multiple Choice",
+        true_false_question: "True/False",
+        short_answer_question: "Short Answer",
+        essay_question: "Essay",
+    };
+
+    let html = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="form-group" style="flex:1; margin-bottom:0; margin-right:12px;">
+                <label>Quiz Title</label>
+                <input type="text" class="form-input" id="aigen-title" value="${escapeHtml(generatedTitle)}">
+            </div>
+            <div class="btn-group" style="margin:0;">
+                <button class="btn success" onclick="createDraftQuiz()">Create Draft Quiz in Canvas</button>
+                <button class="btn secondary" onclick="generateQuiz()">Regenerate</button>
+            </div>
+        </div>
+    `;
+
+    generatedQuestions.forEach((q, i) => {
+        const qType = typeLabels[q.question_type] || q.question_type;
+        let answersHtml = '';
+        if (q.answers && q.answers.length > 0) {
+            const isMC = ['multiple_choice_question', 'true_false_question'].includes(q.question_type);
+            answersHtml = '<div style="margin-top:8px;">';
+            q.answers.forEach((a, ai) => {
+                if (isMC) {
+                    answersHtml += `<div class="answer-row">
+                        <input type="radio" name="gen-correct-${i}" value="${ai}" ${a.correct ? 'checked' : ''} onchange="updateGenAnswer(${i}, ${ai})">
+                        <input type="text" value="${escapeHtml(a.text)}" oninput="updateGenAnswerText(${i}, ${ai}, this.value)">
+                    </div>`;
+                } else {
+                    answersHtml += `<div class="answer-row">
+                        <span class="correct-mark">&#10003;</span>
+                        <input type="text" value="${escapeHtml(a.text)}" oninput="updateGenAnswerText(${i}, ${ai}, this.value)">
+                    </div>`;
+                }
+            });
+            answersHtml += '</div>';
+        }
+
+        html += `
+            <div class="question-card" id="gen-q-${i}">
+                <div class="q-header">
+                    <span class="q-number">Q${i + 1}</span>
+                    <span class="q-type">${qType}</span>
+                    <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+                        <label style="font-size:11px; color:#888;">Pts:</label>
+                        <input type="number" value="${q.points_possible}" min="0" step="0.5" style="width:60px; background:#fff; border:1px solid #ccc; padding:4px 8px; border-radius:4px; font-size:13px;" oninput="generatedQuestions[${i}].points_possible = parseFloat(this.value) || 0">
+                        <button class="btn small danger" onclick="removeGenQuestion(${i})">Delete</button>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:8px;">
+                    <div class="desc-editor">
+                        <textarea class="form-input desc-editor-source" style="min-height:60px;" oninput="generatedQuestions[${i}].question_text = this.value; this.nextElementSibling.innerHTML = this.value;">${q.question_text}</textarea>
+                        <div class="desc-editor-preview q-preview">${q.question_text}</div>
+                    </div>
+                </div>
+                ${answersHtml}
+            </div>
+        `;
+    });
+
+    results.innerHTML = html;
+}
+
+function updateGenAnswer(qIdx, ansIdx) {
+    generatedQuestions[qIdx].answers.forEach((a, i) => {
+        a.correct = (i === ansIdx);
+        a.weight = (i === ansIdx) ? 100 : 0;
+    });
+}
+
+function updateGenAnswerText(qIdx, ansIdx, text) {
+    generatedQuestions[qIdx].answers[ansIdx].text = text;
+}
+
+function removeGenQuestion(idx) {
+    generatedQuestions.splice(idx, 1);
+    renderGeneratedQuiz();
+}
+
+async function createDraftQuiz() {
+    if (!currentCourseId) { setStatus("Select a course first", "error"); return; }
+    if (generatedQuestions.length === 0) { setStatus("No questions to create", "error"); return; }
+
+    const title = document.getElementById("aigen-title").value || generatedTitle;
+    setStatus("Creating draft quiz in Canvas...");
+
+    try {
+        const questions = generatedQuestions.map(q => ({
+            question_name: "Question",
+            question_text: q.question_text,
+            question_type: q.question_type,
+            points_possible: q.points_possible,
+            answers: q.answers.map(a => ({
+                text: a.text,
+                weight: a.correct ? 100 : 0,
+            })),
+        }));
+
+        const result = await api(`/api/canvas/course/${currentCourseId}/quizzes/batch-create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, questions }),
+        });
+
+        if (result.success) {
+            setStatus(`Created draft quiz: ${result.quiz.title} (${result.questions_added} questions)`, "success");
+            loadQuizList();
+            loadQuizEditor(result.quiz.id);
+        }
+    } catch (err) {
+        setStatus(`Error creating quiz: ${err.message}`, "error");
+    }
+}
+
+
+// ══════════════════════════════════════════════════════
+// AI REVIEW
+// ══════════════════════════════════════════════════════
+async function reviewQuiz() {
+    if (!currentQuizId) { setStatus("No quiz loaded", "error"); return; }
+    const editor = document.getElementById("quiz-editor");
+
+    // Collect all question text and answers
+    const questionCards = editor.querySelectorAll('.question-card');
+    let quizContent = "";
+    questionCards.forEach((card, i) => {
+        const textarea = card.querySelector('textarea');
+        const text = textarea ? textarea.value : '';
+        const answers = card.querySelectorAll('.answer-row input[type="text"]');
+        const correctRadio = card.querySelector('input[type="radio"]:checked');
+        let answersText = "";
+        answers.forEach((a, j) => {
+            const isCorrect = correctRadio && parseInt(correctRadio.value) === j;
+            answersText += `  ${String.fromCharCode(65 + j)}. ${a.value}${isCorrect ? ' [CORRECT]' : ''}\n`;
+        });
+        quizContent += `Question ${i + 1}:\n${text}\n${answersText}\n`;
+    });
+
+    if (!quizContent.trim()) { setStatus("No question content to review", "error"); return; }
+
+    // Get review prompt template
+    let promptTemplate = "Review the following quiz questions and identify:\n1. Ambiguous or unclear wording\n2. Questions where multiple answers could be correct\n3. Trick questions\n4. Factual errors\n5. Suggestions for improvement\n\nQuiz content:\n{content}\n\nProvide specific suggestions for each issue.";
+    try {
+        const prompts = await api("/api/prompts");
+        if (prompts.review_quiz) promptTemplate = prompts.review_quiz.prompt;
+    } catch (e) {}
+
+    const fullPrompt = promptTemplate.replace('{content}', quizContent);
+
+    // Add or replace review panel
+    let reviewPanel = editor.querySelector('.ai-review-panel');
+    if (!reviewPanel) {
+        reviewPanel = document.createElement("div");
+        reviewPanel.className = "ai-review-panel";
+        editor.appendChild(reviewPanel);
+    }
+    reviewPanel.innerHTML = '<h4><span class="spinner"></span> AI Review in progress...</h4><div class="review-content"></div>';
+    const reviewContent = reviewPanel.querySelector('.review-content');
+
+    // Stream the review
+    try {
+        const resp = await fetch("/api/ai/review", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: fullPrompt }),
+        });
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value);
+            for (const line of chunk.split("\n")) {
+                if (line.startsWith("data: ") && line.substring(6) !== "[DONE]") {
+                    try {
+                        const parsed = JSON.parse(line.substring(6));
+                        if (parsed.text) { fullText += parsed.text; reviewContent.textContent = fullText; }
+                        if (parsed.error) { reviewContent.innerHTML = `<span style="color:#A51C30;">${escapeHtml(parsed.error)}</span>`; }
+                    } catch (e) {}
+                }
+            }
+        }
+        reviewPanel.querySelector('h4').innerHTML = '&#9888; AI Review Results';
+        setStatus("Quiz review complete", "success");
+    } catch (err) {
+        reviewPanel.querySelector('h4').innerHTML = '&#9888; AI Review';
+        reviewContent.innerHTML = `<span style="color:#A51C30;">Error: ${escapeHtml(err.message)}</span>`;
+    }
+}
+
+async function reviewAssignment(assignmentId) {
+    const desc = document.getElementById("ea-desc");
+    if (!desc || !desc.value.trim()) { setStatus("No assignment description to review", "error"); return; }
+
+    const content = desc.value;
+
+    // Get review prompt template
+    let promptTemplate = "Review the following assignment and identify:\n1. Ambiguous instructions\n2. Missing information\n3. Unclear grading criteria\n4. Wording improvements\n\nAssignment:\n{content}\n\nProvide specific suggestions.";
+    try {
+        const prompts = await api("/api/prompts");
+        if (prompts.review_assignment) promptTemplate = prompts.review_assignment.prompt;
+    } catch (e) {}
+
+    const fullPrompt = promptTemplate.replace('{content}', content);
+
+    const editor = document.getElementById("assignment-editor");
+    let reviewPanel = editor.querySelector('.ai-review-panel');
+    if (!reviewPanel) {
+        reviewPanel = document.createElement("div");
+        reviewPanel.className = "ai-review-panel";
+        editor.appendChild(reviewPanel);
+    }
+    reviewPanel.innerHTML = '<h4><span class="spinner"></span> AI Review in progress...</h4><div class="review-content"></div>';
+    const reviewContent = reviewPanel.querySelector('.review-content');
+
+    try {
+        const resp = await fetch("/api/ai/review", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: fullPrompt }),
+        });
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value);
+            for (const line of chunk.split("\n")) {
+                if (line.startsWith("data: ") && line.substring(6) !== "[DONE]") {
+                    try {
+                        const parsed = JSON.parse(line.substring(6));
+                        if (parsed.text) { fullText += parsed.text; reviewContent.textContent = fullText; }
+                        if (parsed.error) { reviewContent.innerHTML = `<span style="color:#A51C30;">${escapeHtml(parsed.error)}</span>`; }
+                    } catch (e) {}
+                }
+            }
+        }
+        reviewPanel.querySelector('h4').innerHTML = '&#9888; AI Review Results';
+        setStatus("Assignment review complete", "success");
+    } catch (err) {
+        reviewPanel.querySelector('h4').innerHTML = '&#9888; AI Review';
+        reviewContent.innerHTML = `<span style="color:#A51C30;">Error: ${escapeHtml(err.message)}</span>`;
+    }
 }
 
 

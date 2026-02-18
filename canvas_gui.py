@@ -851,6 +851,260 @@ def ai_chat():
     )
 
 
+# ── Prompt Template API ──────────────────────────────────────────────
+
+PROMPTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts.json")
+
+
+def load_prompts():
+    """Load prompt templates from disk."""
+    try:
+        with open(PROMPTS_FILE, "r") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def save_prompts(prompts):
+    """Save prompt templates to disk."""
+    with open(PROMPTS_FILE, "w") as f:
+        json.dump(prompts, f, indent=2)
+
+
+@app.route("/api/prompts")
+def get_prompts():
+    """Return all prompt templates."""
+    return jsonify(load_prompts())
+
+
+@app.route("/api/prompts/<key>", methods=["PUT"])
+def update_prompt(key):
+    """Update a single prompt template."""
+    prompts = load_prompts()
+    data = request.json
+    prompts[key] = {
+        "name": data.get("name", key),
+        "description": data.get("description", ""),
+        "prompt": data.get("prompt", ""),
+    }
+    save_prompts(prompts)
+    return jsonify({"success": True})
+
+
+@app.route("/api/prompts/<key>", methods=["DELETE"])
+def delete_prompt(key):
+    """Delete a prompt template."""
+    prompts = load_prompts()
+    if key in prompts:
+        del prompts[key]
+        save_prompts(prompts)
+    return jsonify({"success": True})
+
+
+# ── Source Content API ────────────────────────────────────────────────
+
+@app.route("/api/source-content", methods=["POST"])
+def get_source_content():
+    """Fetch text content from Canvas pages, assignments, or local files."""
+    import re as _re
+    data = request.json
+    sources = data.get("sources", [])
+    course_id = data.get("course_id")
+
+    texts = []
+    for src in sources:
+        src_type = src.get("type")
+        try:
+            if src_type == "canvas_page" and course_id:
+                page = canvas_get(f"courses/{course_id}/pages/{src['url']}")
+                body = page.get("body", "")
+                text = _re.sub(r'<[^>]+>', '', body)
+                texts.append(f"=== Page: {page.get('title', '')} ===\n{text}")
+            elif src_type == "canvas_assignment" and course_id:
+                assignments = canvas_get(f"courses/{course_id}/assignments", {"per_page": 100})
+                a = next((x for x in assignments if x["id"] == src.get("id")), None)
+                if a:
+                    desc = a.get("description", "") or ""
+                    text = _re.sub(r'<[^>]+>', '', desc)
+                    texts.append(f"=== Assignment: {a.get('name', '')} ===\n{text}")
+            elif src_type == "local_file":
+                path = os.path.expanduser(src.get("path", ""))
+                if os.path.isfile(path):
+                    with open(path, "r", errors="replace") as f:
+                        content = f.read()
+                    texts.append(f"=== File: {os.path.basename(path)} ===\n{content}")
+            elif src_type == "text":
+                texts.append(src.get("content", ""))
+        except Exception as e:
+            texts.append(f"[Error loading source: {e}]")
+
+    return jsonify({"content": "\n\n".join(texts)})
+
+
+# ── AI Quiz Generation API ───────────────────────────────────────────
+
+@app.route("/api/ai/quiz-generate", methods=["POST"])
+def ai_quiz_generate():
+    """Generate quiz questions using AI (non-streaming, returns JSON)."""
+    import re as _re
+    data = request.json
+    prompt_text = data.get("prompt", "")
+
+    try:
+        env = os.environ.copy()
+        env.setdefault("ANTHROPIC_BEDROCK_BASE_URL",
+                       "https://apis.huit.harvard.edu/ais-bedrock-llm/v2")
+        env.setdefault("CLAUDE_CODE_SKIP_BEDROCK_AUTH", "1")
+        env.setdefault("CLAUDE_CODE_USE_BEDROCK", "1")
+
+        proc = subprocess.run(
+            ["claude", "-p", prompt_text],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env=env,
+            cwd=os.path.dirname(os.path.abspath(__file__)),
+        )
+
+        output = proc.stdout.strip()
+        if proc.returncode != 0 and not output:
+            return jsonify({"success": False, "error": proc.stderr.strip()}), 500
+
+        # Strip markdown fences if present
+        json_match = _re.search(r'```(?:json)?\s*([\s\S]*?)```', output)
+        if json_match:
+            output = json_match.group(1).strip()
+
+        # Find JSON object in output
+        brace_start = output.find('{')
+        if brace_start >= 0:
+            output = output[brace_start:]
+
+        result = json.loads(output)
+        return jsonify({"success": True, "data": result})
+
+    except json.JSONDecodeError:
+        return jsonify({
+            "success": False,
+            "error": "AI response was not valid JSON",
+            "raw": output[:2000],
+        }), 400
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "AI request timed out"}), 504
+    except FileNotFoundError:
+        return jsonify({
+            "success": False,
+            "error": "Claude CLI not found. Install with: npm install -g @anthropic-ai/claude-code",
+        }), 500
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ── AI Review API ─────────────────────────────────────────────────────
+
+@app.route("/api/ai/review", methods=["POST"])
+def ai_review():
+    """Review content using AI (streaming response)."""
+    data = request.json
+    prompt_text = data.get("prompt", "")
+
+    def generate():
+        try:
+            env = os.environ.copy()
+            env.setdefault("ANTHROPIC_BEDROCK_BASE_URL",
+                           "https://apis.huit.harvard.edu/ais-bedrock-llm/v2")
+            env.setdefault("CLAUDE_CODE_SKIP_BEDROCK_AUTH", "1")
+            env.setdefault("CLAUDE_CODE_USE_BEDROCK", "1")
+
+            proc = subprocess.Popen(
+                ["claude", "-p", prompt_text],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                env=env,
+                cwd=os.path.dirname(os.path.abspath(__file__)),
+            )
+
+            for line in proc.stdout:
+                yield f"data: {json.dumps({'text': line})}\n\n"
+
+            proc.wait()
+            if proc.returncode != 0:
+                err = proc.stderr.read()
+                yield f"data: {json.dumps({'error': err})}\n\n"
+
+            yield "data: [DONE]\n\n"
+
+        except FileNotFoundError:
+            yield f"data: {json.dumps({'error': 'Claude CLI not found'})}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield "data: [DONE]\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# ── Batch Quiz Creation ──────────────────────────────────────────────
+
+@app.route("/api/canvas/course/<int:course_id>/quizzes/batch-create", methods=["POST"])
+def canvas_batch_create_quiz(course_id):
+    """Create a quiz and add all questions in one operation."""
+    data = request.json
+
+    # Create the quiz
+    quiz_data = {
+        "quiz[title]": data.get("title", "AI Generated Quiz"),
+        "quiz[description]": data.get("description", ""),
+        "quiz[quiz_type]": data.get("quiz_type", "assignment"),
+        "quiz[published]": False,
+    }
+    if data.get("time_limit"):
+        quiz_data["quiz[time_limit]"] = data["time_limit"]
+
+    resp = requests.post(
+        f"{CANVAS_API_URL}/courses/{course_id}/quizzes",
+        headers=HEADERS,
+        data=quiz_data,
+    )
+    resp.raise_for_status()
+    quiz = resp.json()
+    quiz_id = quiz["id"]
+
+    # Add questions
+    questions = data.get("questions", [])
+    added = []
+    for q in questions:
+        q_data = {
+            "question[question_name]": q.get("question_name", "Question"),
+            "question[question_text]": q.get("question_text", ""),
+            "question[question_type]": q.get("question_type", "multiple_choice_question"),
+            "question[points_possible]": q.get("points_possible", 1),
+        }
+        if "answers" in q:
+            for i, ans in enumerate(q["answers"]):
+                q_data[f"question[answers][{i}][answer_text]"] = ans.get("text", "")
+                q_data[f"question[answers][{i}][answer_weight]"] = ans.get("weight", 0)
+
+        qresp = requests.post(
+            f"{CANVAS_API_URL}/courses/{course_id}/quizzes/{quiz_id}/questions",
+            headers=HEADERS,
+            data=q_data,
+        )
+        qresp.raise_for_status()
+        added.append(qresp.json())
+
+    return jsonify({
+        "success": True,
+        "quiz": {"id": quiz_id, "title": quiz["title"]},
+        "questions_added": len(added),
+    })
+
+
 # ── Helpers ────────────────────────────────────────────────────────────
 
 def format_size(size_bytes):
