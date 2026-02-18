@@ -37,19 +37,26 @@ code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 12p
     <h1>Canvas Course Manager</h1>
 </header>
 
-<p>A browser-based GUI for managing Canvas LMS courses, built with Flask and vanilla JavaScript. Run it locally and manage your entire course from a single interface — no clicking through Canvas menus.</p>
+<p>A browser-based GUI for managing Canvas LMS courses, built with Flask and vanilla JavaScript. Run it locally and manage your entire course from a single interface — no clicking through Canvas menus. Version 1.0.</p>
 
-<h2>Features</h2>
+<h2>9 Integrated Tabs</h2>
 <ul class="features">
     <li><strong>Browse</strong> — Expandable module tree with items grouped by type (assignments, quizzes, pages, discussions)</li>
     <li><strong>Calendar</strong> — Month-by-month view showing assignment availability windows and quiz due dates; click any event to jump to its editor</li>
     <li><strong>Student Progress</strong> — Ranked scores, Canvas access statistics, missing/late submissions, per-assignment averages</li>
-    <li><strong>File Manager</strong> — Two-panel view: local files on the left, Canvas files on the right, with drag-and-drop upload and file type filters</li>
-    <li><strong>Assignment Editor</strong> — Create, edit, publish/unpublish, and delete assignments with side-by-side HTML source and rendered preview</li>
-    <li><strong>Quiz Editor</strong> — Create quizzes, add/edit/delete questions, change correct answers, with live HTML preview</li>
-    <li><strong>Page Editor</strong> — Edit Canvas wiki pages with live preview</li>
+    <li><strong>File Manager</strong> — Two-panel view: local files on the left, Canvas files on the right, with drag-and-drop upload, file type filters, and resizable panels</li>
+    <li><strong>Assignment Editor</strong> — Create, edit, publish/unpublish, and delete assignments with side-by-side HTML source and rendered preview; AI generation and review</li>
+    <li><strong>Quiz Editor</strong> — Create quizzes with 6 question types, live HTML preview; AI generation and review</li>
+    <li><strong>Page Editor</strong> — Edit Canvas wiki pages with side-by-side HTML source and live preview</li>
     <li><strong>LaTeX &rarr; Canvas</strong> — Side-by-side editor that converts LaTeX equations into Canvas equation image format, with AI-assisted LaTeX generation</li>
-    <li><strong>AI Assistant</strong> — Chat interface powered by Claude Code with Canvas MCP tools for course queries</li>
+    <li><strong>AI Assistant</strong> — Chat interface powered by Claude with a skills/macros panel for quiz generation, exam creation, assignment generation, and review tasks</li>
+</ul>
+
+<h2>AI-Powered Workflows</h2>
+<ul class="features">
+    <li><strong>Generate</strong> — Select source materials (Canvas pages, local files, free text), enter a topic, and AI generates quizzes, exams, or assignments</li>
+    <li><strong>Review</strong> — One-click AI review of quizzes and assignments for ambiguous wording, factual errors, and missing information</li>
+    <li><strong>Customizable Prompts</strong> — All AI actions use editable prompt templates; click the gear icon to customize how the AI generates and reviews content</li>
 </ul>
 
 <h2>Prerequisites</h2>
@@ -57,7 +64,8 @@ code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 12p
 <ul>
     <li>Python 3.10+ with Flask (<code>pip install flask requests</code>)</li>
     <li>A Canvas LMS account with a valid API token</li>
-    <li>(Optional) Claude Code for the AI Assistant tab</li>
+    <li>Anthropic API key (or Bedrock gateway) for AI features</li>
+    <li>(Optional) Claude Code for the AI Assistant chat tab</li>
 </ul>
 </div>
 

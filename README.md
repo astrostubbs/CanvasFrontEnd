@@ -1,23 +1,35 @@
 # Canvas Course Manager
 
-A browser-based GUI for managing Canvas LMS courses. Built with Flask and vanilla JavaScript.
+A browser-based GUI for managing Canvas LMS courses. Built with Flask and vanilla JavaScript. Version 1.0.
 
 ## Features
 
+### 9 Integrated Tabs
+
 - **Browse** — Expandable module tree with items grouped by type (assignments, quizzes, pages, discussions)
-- **Calendar** — Month-by-month view showing assignment availability windows and quiz due dates
-- **Student Progress** — Ranked scores, grade distribution, missing/late submissions, per-assignment averages
-- **File Manager** — Two-panel view: local files on the left, Canvas files on the right, with drag-and-drop upload
-- **Assignment Editor** — Create, edit, publish/unpublish, and delete assignments with full date control
-- **Quiz Editor** — Create quizzes, add/edit/delete questions, change correct answers, inline save
-- **LaTeX → Canvas** — Side-by-side editor that converts LaTeX equations into Canvas equation image format, with live preview, AI-assisted LaTeX generation, and direct save to Canvas pages
-- **AI Assistant** — Chat interface powered by Claude Code with Canvas MCP tools for course queries
+- **Calendar** — Month-by-month view showing assignment availability windows and quiz due dates; click any event to jump to its editor
+- **Student Progress** — Ranked scores, Canvas access statistics, missing/late submissions, per-assignment averages
+- **File Manager** — Two-panel view: local files on the left, Canvas files on the right, with drag-and-drop upload, file type filters, and resizable panels
+- **Assignment Editor** — Create, edit, publish/unpublish, and delete assignments with side-by-side HTML source and rendered preview
+- **Quiz Editor** — Create quizzes with 6 question types (multiple choice, true/false, short answer, essay, multiple answers, fill-in-the-blank), with live HTML preview
+- **Page Editor** — Edit Canvas wiki pages with side-by-side HTML source and live preview
+- **LaTeX → Canvas** — Side-by-side editor that converts LaTeX equations into Canvas equation image format, with AI-assisted LaTeX generation and direct save to Canvas pages
+- **AI Assistant** — Chat interface powered by Claude with a skills/macros panel for common tasks
+
+### AI-Powered Workflows
+
+- **AI Quiz Generation** — Select source materials (Canvas pages, local files, free text), choose a topic and question type, and generate a complete quiz with AI. Review, edit, and publish as a draft Canvas quiz.
+- **AI Assignment Generation** — Generate complete assignments with instructions and grading criteria from a topic description and source materials.
+- **AI Review** — One-click AI review of quizzes and assignments for ambiguous wording, factual errors, missing information, and other issues.
+- **Editable Prompt Templates** — All AI actions use customizable prompt templates. Edit them via the gear icon to control how the AI generates and reviews content.
+- **AI Skills Panel** — Pre-built skills in the AI Assistant tab for quiz generation, exam generation, assignment generation, and review tasks.
 
 ## Prerequisites
 
 - Python 3.10+
 - A Canvas LMS account with a valid API token
-- (Optional) [Claude Code](https://claude.ai/claude-code) for the AI Assistant tab
+- An Anthropic API key (or Bedrock gateway) for AI features
+- (Optional) [Claude Code](https://claude.ai/claude-code) for the AI Assistant chat tab
 
 ## Quick Start
 
@@ -88,11 +100,15 @@ The AI Assistant inherits your shell environment variables, so any Claude Code c
 
 ```
 CanvasFrontEnd/
-├── canvas_gui.py          # Flask backend — API proxy + local file serving
+├── canvas_gui.py          # Flask backend — API proxy, AI endpoints, local file serving
 ├── templates/
 │   └── index.html         # Single-page frontend (all HTML/CSS/JS)
+├── prompts.json           # Editable AI prompt templates
 ├── docs/
-│   └── user_guide.tex     # LaTeX user guide
+│   ├── user_guide.tex     # LaTeX user guide (v2.0, 24 pages)
+│   ├── user_guide.pdf     # Compiled user guide
+│   ├── wallet_card.tex    # One-page visual quick reference
+│   └── wallet_card.pdf    # Compiled wallet card
 ├── .env.example           # Template for environment variables
 ├── .gitignore
 ├── requirements.txt

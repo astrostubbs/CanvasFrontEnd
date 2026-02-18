@@ -1,249 +1,262 @@
-\documentclass[10pt,letterpaper,landscape]{article}
+\documentclass[11pt,letterpaper,landscape]{article}
 
-\usepackage[margin=0.4in]{geometry}
-\usepackage{multicol}
+\usepackage[margin=0.35in]{geometry}
 \usepackage{xcolor}
-\usepackage{enumitem}
-\usepackage{graphicx}
 \usepackage{tikz}
-\usepackage{fancyhdr}
-\usepackage{booktabs}
-\usepackage{tcolorbox}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, fit, backgrounds, decorations.pathrounded, shadows}
+\usepackage{hyperref}
 
 % ── Colors ────────────────────────────────────────────
 \definecolor{crimson}{HTML}{A51C30}
 \definecolor{navy}{HTML}{1E1E1E}
 \definecolor{lightgray}{HTML}{F0F0F0}
 \definecolor{teal}{HTML}{1D8348}
-\definecolor{amber}{HTML}{B7950B}
+\definecolor{amber}{HTML}{D4930D}
+\definecolor{softblue}{HTML}{4A90D9}
+\definecolor{softpurple}{HTML}{7B5EA7}
+\definecolor{warmgray}{HTML}{F8F6F4}
 
-% ── No page number ────────────────────────────────────
 \pagestyle{empty}
-
-% ── Compact spacing ───────────────────────────────────
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{2pt}
-\setlength{\columnsep}{16pt}
-
-% ── Section styling ───────────────────────────────────
-\newcommand{\chead}[1]{{\color{crimson}\bfseries\normalsize #1}\vspace{1pt}\par\noindent\textcolor{crimson}{\rule{\linewidth}{0.4pt}}\vspace{2pt}\par}
-\newcommand{\csub}[1]{{\color{navy}\bfseries\small #1}\par}
-\newcommand{\kbd}[1]{\colorbox{lightgray}{\texttt{\small #1}}}
 
 \begin{document}
 
-% ── Header ────────────────────────────────────────────
-\begin{center}
-{\Large\bfseries\color{crimson} Canvas Course Manager} \quad {\large Quick Reference Card}\\[1pt]
-{\small\color{gray} Harvard University \quad|\quad v2.0 \quad|\quad \url{http://localhost:5050}}
-\end{center}
-\vspace{-2pt}
-\textcolor{crimson}{\rule{\textwidth}{1pt}}
-\vspace{4pt}
+\begin{tikzpicture}[remember picture, overlay, shift={(current page.center)}]
 
-\begin{multicols}{4}
+% ════════════════════════════════════════════════════════
+% BACKGROUND
+% ════════════════════════════════════════════════════════
+\fill[warmgray] (-14,-10.5) rectangle (14,10.5);
 
-% ════════════════════════════════════════
-\chead{Getting Started}
-% ════════════════════════════════════════
+% ════════════════════════════════════════════════════════
+% TITLE BAR
+% ════════════════════════════════════════════════════════
+\fill[crimson] (-14,9.0) rectangle (14,10.5);
+\node[text=white, font=\Huge\bfseries, anchor=west] at (-13.2,9.75) {Canvas Course Manager};
+\node[text=white!70, font=\large, anchor=east] at (13.2,9.75) {One Interface for Your Entire Course};
 
-\textbf{Start the server:}\\
-\kbd{set -a; source .env; set +a}\\
-\kbd{python canvas\_gui.py}\\[2pt]
-Open \textbf{localhost:5050} in browser.\\[2pt]
-Select a course from the dropdown to load all tabs.
+% ════════════════════════════════════════════════════════
+% CENTRAL APP DIAGRAM
+% ════════════════════════════════════════════════════════
 
-\textbf{Required .env variables:}\\
-\kbd{CANVAS\_API\_TOKEN} --- your token\\
-\kbd{CANVAS\_API\_URL} --- with \texttt{/api/v1}\\
-\kbd{LOCAL\_ROOT} --- local file directory
+% App frame
+\fill[white, rounded corners=6pt, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.15}]
+    (-7.5,3.8) rectangle (7.5,8.7);
 
-% ════════════════════════════════════════
-\chead{9 Tabs}
-% ════════════════════════════════════════
+% Header bar
+\fill[crimson!10, rounded corners=3pt] (-7.2,8.0) rectangle (7.2,8.4);
+\node[text=crimson, font=\footnotesize\bfseries, anchor=west] at (-7.0,8.2) {Canvas Course Manager};
+\fill[white, rounded corners=2pt, draw=gray!30] (-1,8.05) rectangle (4,8.35);
+\node[text=gray, font=\tiny] at (1.5,8.2) {ASTRO17: Stellar Astrophysics};
+\node[text=gray!60, font=\small, anchor=east] at (7.0,8.2) {\(\circledS\)};
 
-\begin{tabular}{@{}ll@{}}
-\textbf{Browse} & Course modules, pages \\
-\textbf{Calendar} & Monthly schedule view \\
-\textbf{Students} & Scores, access stats \\
-\textbf{Files} & Local $\leftrightarrow$ Canvas \\
-\textbf{Assignments} & Create, edit, AI gen \\
-\textbf{Quizzes} & Questions, AI gen \\
-\textbf{Pages} & Wiki page editor \\
-\textbf{LaTeX} & Equations $\to$ Canvas \\
-\textbf{AI Assist} & Chat + skill macros \\
-\end{tabular}
+% Tab bar — each tab as a rounded pill
+\foreach \x/\w/\label/\col in {
+    -7.0/1.3/Browse/gray,
+    -5.5/1.5/Calendar/gray,
+    -3.8/1.5/Students/gray,
+    -2.1/1.0/Files/gray,
+    -0.9/2.0/Assignments/gray,
+    1.3/1.3/Quizzes/crimson,
+    2.8/1.1/Pages/gray,
+    4.1/1.5/LaTeX/gray,
+    5.8/1.5/AI Assist/gray
+} {
+    \ifx\col\crimson
+        \fill[crimson!12, rounded corners=2pt] (\x,7.5) rectangle (\x+\w,7.85);
+        \draw[crimson, thick] (\x,7.5) -- (\x+\w,7.5);
+        \node[text=crimson, font=\tiny\bfseries] at (\x+\w/2,7.67) {\label};
+    \else
+        \node[text=gray!70, font=\tiny] at (\x+\w/2,7.67) {\label};
+    \fi
+}
 
-% ════════════════════════════════════════
-\chead{Browse Tab}
-% ════════════════════════════════════════
+% Content area — show a quiz editor mockup
+\fill[gray!5, rounded corners=3pt] (-7.2,4.1) rectangle (7.2,7.3);
+% Sidebar
+\fill[gray!8, rounded corners=2pt] (-7.0,4.3) rectangle (-4.5,7.1);
+\node[text=gray, font=\tiny\bfseries] at (-5.75,6.85) {Quizzes};
+\foreach \y/\name/\sel in {6.4/Midterm Exam/0, 6.05/Module 3 Quiz/1, 5.7/Practice Quiz/0} {
+    \ifnum\sel=1
+        \fill[crimson!10, rounded corners=1pt] (-6.9,\y-0.13) rectangle (-4.6,\y+0.13);
+    \fi
+    \node[text=navy, font=\tiny, anchor=west] at (-6.8,\y) {\name};
+}
+% Editor area
+\fill[white, rounded corners=2pt] (-4.3,4.3) rectangle (7.0,7.1);
+\node[text=crimson, font=\scriptsize\bfseries, anchor=west] at (-4.0,6.85) {Q1 \quad\textcolor{gray!60}{Multiple Choice}};
+\fill[gray!8, rounded corners=1pt] (-4.0,5.9) rectangle (0.8,6.5);
+\node[text=navy, font=\tiny, anchor=west, text width=4.5cm] at (-3.8,6.2) {What process generates energy in main sequence stars?};
+\fill[gray!8, rounded corners=1pt] (1.2,5.9) rectangle (6.8,6.5);
+\node[text=navy, font=\tiny, anchor=west, text width=5cm] at (1.4,6.2) {\textit{What process generates energy in main sequence stars?}};
+\node[text=gray!50, font=\tiny] at (-1.6,5.65) {HTML source};
+\node[text=gray!50, font=\tiny] at (4.0,5.65) {Live preview};
+% Answers
+\foreach \y/\ans/\correct in {5.25/Hydrogen fusion/1, 4.95/Gravitational contraction/0, 4.65/Fission of heavy elements/0} {
+    \ifnum\correct=1
+        \node[text=teal, font=\tiny, anchor=west] at (-4.0,\y) {$\bigodot$};
+    \else
+        \node[text=gray!50, font=\tiny, anchor=west] at (-4.0,\y) {$\bigcirc$};
+    \fi
+    \node[text=navy, font=\tiny, anchor=west] at (-3.5,\y) {\ans};
+}
+% Buttons
+\fill[crimson!15, rounded corners=2pt] (3.5,4.4) rectangle (4.6,4.7);
+\node[text=crimson, font=\tiny\bfseries] at (4.05,4.55) {AI Review};
+\fill[teal!15, rounded corners=2pt] (4.8,4.4) rectangle (5.7,4.7);
+\node[text=teal, font=\tiny\bfseries] at (5.25,4.55) {Publish};
+\fill[softblue!15, rounded corners=2pt] (5.9,4.4) rectangle (6.8,4.7);
+\node[text=softblue, font=\tiny] at (6.35,4.55) {Canvas};
 
-\textbullet\ Click module to expand/collapse\\
-\textbullet\ Items grouped by type\\
-\textbullet\ Quick links: Gradebook, Syllabus, Files, People\\
-\textbullet\ Click any item $\to$ opens in Canvas
+% ════════════════════════════════════════════════════════
+% LEFT COLUMN — WHAT IT DOES
+% ════════════════════════════════════════════════════════
 
-% ════════════════════════════════════════
-\chead{Calendar}
-% ════════════════════════════════════════
+% Section: 9 integrated tools
+\node[text=crimson, font=\large\bfseries, anchor=north west] at (-13.5,8.5) {9 Integrated Tools};
+\draw[crimson, thick] (-13.5,8.2) -- (-8.2,8.2);
 
-\textcolor{crimson}{\rule{6pt}{6pt}} Assignment due dates\\
-\textcolor{amber}{\rule{6pt}{6pt}} Quiz due dates\\
-\textcolor{purple}{\rule{6pt}{6pt}} Availability windows\\[2pt]
-\textbullet\ Click event $\to$ opens \emph{local} editor\\
-\textbullet\ Prev/Next/Today navigation
+% Tab icons as a visual grid
+\foreach \row/\y in {0/7.6, 1/6.6, 2/5.6} {
+    % Row 0
+}
 
-% ════════════════════════════════════════
-\chead{Students}
-% ════════════════════════════════════════
+% Define tabs as visual cards
+\foreach \x/\y/\icon/\name/\desc/\col in {
+    -13.2/7.3/\(\equiv\)/Browse/Modules \& pages/gray,
+    -10.8/7.3/\(\boxdot\)/Calendar/Schedule view/amber,
+    -13.2/6.2/\(\clubsuit\)/Students/Scores \& access/softblue,
+    -10.8/6.2/\(\leftrightarrows\)/Files/Local \& Canvas/teal,
+    -13.2/5.1/\(\square\)/Assignments/Edit \& AI gen/softpurple,
+    -10.8/5.1/\(??\)/Quizzes/Edit \& AI gen/crimson
+} {
+    \fill[\col!8, rounded corners=3pt] (\x,\y-0.35) rectangle (\x+2.2,\y+0.35);
+    \draw[\col!40, rounded corners=3pt] (\x,\y-0.35) rectangle (\x+2.2,\y+0.35);
+    \node[text=\col, font=\footnotesize\bfseries, anchor=west] at (\x+0.15,\y+0.08) {\name};
+    \node[text=gray, font=\tiny, anchor=west] at (\x+0.15,\y-0.15) {\desc};
+}
+\foreach \x/\y/\name/\desc/\col in {
+    -13.2/4.0/Pages/Wiki editor/softblue,
+    -10.8/4.0/LaTeX/Equations/teal,
+    -13.2/2.9/AI Assist/Chat \& skills/crimson
+} {
+    \fill[\col!8, rounded corners=3pt] (\x,\y-0.35) rectangle (\x+2.2,\y+0.35);
+    \draw[\col!40, rounded corners=3pt] (\x,\y-0.35) rectangle (\x+2.2,\y+0.35);
+    \node[text=\col, font=\footnotesize\bfseries, anchor=west] at (\x+0.15,\y+0.08) {\name};
+    \node[text=gray, font=\tiny, anchor=west] at (\x+0.15,\y-0.15) {\desc};
+}
 
-\textbullet\ Summary: count, mean, median, missing\\
-\textbullet\ Ranked score bars (green/yellow/red)\\
-\textbullet\ \textbf{Canvas Access Statistics:} page views + participations per student\\
-\textbullet\ Missing \& late submission lists\\
-\textbullet\ Per-assignment averages
+% ════════════════════════════════════════════════════════
+% RIGHT COLUMN — AI PIPELINE
+% ════════════════════════════════════════════════════════
 
-% ════════════════════════════════════════
-\chead{Files}
-% ════════════════════════════════════════
+\node[text=crimson, font=\large\bfseries, anchor=north west] at (8.2,8.5) {AI-Powered Workflows};
+\draw[crimson, thick] (8.2,8.2) -- (13.5,8.2);
 
-\csub{Two-Panel Layout}
-Left: local files \quad Right: Canvas files\\[2pt]
-\textbullet\ \textbf{Drag \& drop} local $\to$ Canvas folder\\
-\textbullet\ \textbf{Type filters:} All, PDF, Python, Images, Docs, Data, Code\\
-\textbullet\ \textbf{Navigate:} $\uparrow$~Up, Home, Desktop buttons\\
-\textbullet\ Double-click folder to enter it\\
-\textbullet\ Click path display to type a path\\
-\textbullet\ Panels are resizable (drag divider)
+% AI Generate flow
+\tikzstyle{flowbox}=[draw=gray!40, fill=white, rounded corners=4pt, minimum width=2.2cm,
+    minimum height=0.65cm, font=\scriptsize, align=center, text=navy, drop shadow={shadow xshift=0.5pt, shadow yshift=-0.5pt, opacity=0.08}]
+\tikzstyle{flowarrow}=[-{Stealth[length=2.5mm]}, thick, crimson!60]
 
-% ════════════════════════════════════════
-\chead{Assignments}
-% ════════════════════════════════════════
+% Generate path
+\node[text=softpurple, font=\footnotesize\bfseries, anchor=west] at (8.3,7.8) {Generate};
+\node[flowbox] (src) at (9.0,7.1) {Select\\sources};
+\node[flowbox] (topic) at (11.0,7.1) {Enter\\topic};
+\node[flowbox] (gen) at (9.0,6.1) {AI\\generates};
+\node[flowbox] (edit) at (11.0,6.1) {Review\\\& edit};
+\node[flowbox] (draft) at (12.7,6.1) {Create\\draft};
+\draw[flowarrow] (src) -- (topic);
+\draw[flowarrow] (topic) -- (gen);
+\draw[flowarrow] (gen) -- (edit);
+\draw[flowarrow] (edit) -- (draft);
 
-\csub{Manual}
-\textbf{+ New} $\to$ fill form $\to$ Create\\
-Click sidebar item $\to$ edit in split editor\\
-\textbf{Save Changes} appears on any edit
+% Source types as tiny labels
+\node[text=gray, font=\tiny, anchor=north, text width=2cm, align=center] at (9.0,6.65) {Canvas pages, local files, free text};
 
-\csub{AI Generate}
-\textbf{AI Generate} button $\to$ enter topic $\to$ optionally add source materials $\to$ Generate $\to$ preview/edit $\to$ \textbf{Create Draft Assignment}
+% Review path
+\node[text=amber, font=\footnotesize\bfseries, anchor=west] at (8.3,5.3) {Review};
+\node[flowbox] (load) at (9.2,4.6) {Load quiz or\\assignment};
+\node[flowbox] (rev) at (11.2,4.6) {Click\\AI Review};
+\node[flowbox] (fix) at (13.0,4.6) {Fix\\issues};
+\draw[flowarrow] (load) -- (rev);
+\draw[flowarrow] (rev) -- (fix);
 
-\csub{AI Review}
-Open an assignment $\to$ \textbf{AI Review} button $\to$ streaming review of wording, clarity, completeness
+% What AI checks
+\node[text=gray, font=\tiny, anchor=north, text width=4cm, align=left] at (11.2,4.15)
+    {Ambiguous wording, multiple correct answers, factual errors, missing info};
 
-% ════════════════════════════════════════
-\chead{Quizzes}
-% ════════════════════════════════════════
+% Prompt templates
+\node[text=teal, font=\footnotesize\bfseries, anchor=west] at (8.3,3.4) {Customizable Prompts};
+\fill[teal!6, rounded corners=4pt] (8.3,2.3) rectangle (13.5,3.15);
+\node[text=navy, font=\tiny, anchor=north west, text width=5cm] at (8.5,3.0)
+    {Every AI action uses an editable prompt template. Click the \textbf{gear icon} to customize how the AI generates questions, reviews exams, writes assignments, etc.};
 
-\csub{Manual}
-\textbf{+ New} $\to$ title, type $\to$ Create\\
-\textbf{+ Add Question}:\\
-\quad 1. Pick type (MC, T/F, Short, Essay, etc.)\\
-\quad 2. Fill in question + answers\\
-\quad 3. Add Question
+% ════════════════════════════════════════════════════════
+% BOTTOM — THREE KEY CONCEPTS
+% ════════════════════════════════════════════════════════
 
-\csub{AI Generate}
-\textbf{AI Generate} $\to$ topic + sources + template $\to$ Generate $\to$ review/edit each Q $\to$ \textbf{Create Draft Quiz}
+\draw[gray!30] (-13.5,2.0) -- (13.5,2.0);
 
-\csub{AI Review}
-Load quiz $\to$ \textbf{AI Review} $\to$ identifies ambiguities, errors, trick questions
+% Concept 1: Architecture
+\node[text=crimson, font=\normalsize\bfseries] at (-10.8,1.5) {How It Works};
 
-\csub{Question Types}
-Multiple Choice, True/False, Short Answer, Essay, Numerical, Multiple Answers
+\tikzstyle{archbox}=[draw=gray!30, fill=white, rounded corners=4pt, minimum width=2.4cm,
+    minimum height=1.1cm, font=\scriptsize, align=center, text=navy]
 
-% ════════════════════════════════════════
-\chead{Pages}
-% ════════════════════════════════════════
+\node[archbox] (browser) at (-12.5,0.0) {\textbf{Your Browser}\\localhost:5050};
+\node[archbox, fill=crimson!5] (flask) at (-10.0,0.0) {\textbf{Flask Server}\\canvas\_gui.py};
+\node[archbox] (canvas) at (-10.0,-1.5) {\textbf{Canvas LMS}\\REST API};
+\node[archbox] (local) at (-12.5,-1.5) {\textbf{Local Files}\\your laptop};
+\node[archbox, fill=softpurple!5] (ai) at (-7.5,0.0) {\textbf{Claude AI}\\quiz gen, review};
 
-\textbullet\ Sidebar list of all pages\\
-\textbullet\ Click to edit (HTML source + preview)\\
-\textbullet\ Create, publish/unpublish, save
+\draw[-{Stealth}, thick, gray] (browser) -- (flask);
+\draw[-{Stealth}, thick, gray] (flask) -- (canvas);
+\draw[-{Stealth}, thick, gray] (flask) -- (local);
+\draw[-{Stealth}, thick, softpurple!60] (flask) -- (ai);
 
-% ════════════════════════════════════════
-\chead{LaTeX $\to$ Canvas}
-% ════════════════════════════════════════
+% Concept 2: Split Editor
+\node[text=crimson, font=\normalsize\bfseries] at (-2.0,1.5) {Split Editors};
 
-1. Type LaTeX in equation bar\\
-2. Live preview renders it\\
-3. \textbf{Insert} places \texttt{<img>} tag\\[2pt]
-\textbullet\ \textbf{Convert All \$\ldots\$} --- batch convert\\
-\textbullet\ \textbf{AI Assist} --- describe equation in English\\
-\textbullet\ \textbf{Quick symbols} toolbar\\
-\textbullet\ Load/Save Canvas pages directly
+\fill[white, rounded corners=3pt, draw=gray!30] (-4.5,-0.3) rectangle (0.5,0.9);
+\fill[gray!8, rounded corners=2pt] (-4.3,-0.1) rectangle (-2.1,0.7);
+\node[text=navy, font=\tiny, align=left, anchor=north west] at (-4.2,0.6) {\texttt{<p>Due: Mar 15</p>}\\[1pt]\texttt{<strong>Submit}\\[1pt]\texttt{as PDF</strong>}};
+\node[text=gray!40, font=\tiny] at (-3.2,-0.3) {HTML source};
+\fill[white, rounded corners=2pt, draw=gray!20] (-1.9,-0.1) rectangle (0.3,0.7);
+\node[text=navy, font=\tiny, align=left, anchor=north west] at (-1.7,0.55) {Due: Mar 15\\[1pt]\textbf{Submit as PDF}};
+\node[text=gray!40, font=\tiny] at (-0.8,-0.3) {Live preview};
 
-% ════════════════════════════════════════
-\chead{AI Assistant}
-% ════════════════════════════════════════
+\node[text=gray, font=\tiny, text width=5cm, align=center] at (-2.0,-0.8)
+    {Assignments, quizzes, and pages all use side-by-side HTML editing with live preview.};
 
-\csub{Skills Panel (left)}
-Clickable prompt macros for common tasks: generate quiz, generate exam, generate assignment, review quiz, review assignment, review exam.\\[2pt]
-Click a skill $\to$ enter input $\to$ auto-sends to chat.
+% Concept 3: Source Materials
+\node[text=crimson, font=\normalsize\bfseries] at (5.5,1.5) {Source Materials for AI};
 
-\csub{Chat (right)}
-Free-form chat with Claude. Course context auto-included. Responses stream in real-time.
+\tikzstyle{srcbox}=[draw=gray!30, fill=white, rounded corners=10pt, minimum height=0.5cm, font=\tiny, text=navy, inner sep=4pt]
 
-% ════════════════════════════════════════
-\chead{Prompt Templates}
-% ════════════════════════════════════════
+\node[srcbox, fill=softblue!8] at (3.5,0.7) {Canvas Pages};
+\node[srcbox, fill=softpurple!8] at (5.7,0.7) {Assignments};
+\node[srcbox, fill=teal!8] at (3.7,0.1) {Local Files};
+\node[srcbox, fill=amber!8] at (5.8,0.1) {Free Text};
 
-\textbullet\ Click \textbf{gear icon} (\texttt{\small\(\circledS\)}) in header\\
-\textbullet\ View/edit all prompt templates\\
-\textbullet\ Placeholders: \texttt{\{topic\}}, \texttt{\{content\}}, \texttt{\{source\_material\}}, \texttt{\{num\_questions\}}, \texttt{\{question\_type\}}, \texttt{\{points\}}\\
-\textbullet\ Add new / delete existing\\
-\textbullet\ Changes saved to \texttt{prompts.json}
+\draw[-{Stealth}, thick, gray!50] (4.8,-0.2) -- (4.8,-0.7);
+\node[text=navy, font=\scriptsize, align=center] at (4.8,-1.0) {Combined as context for AI\\quiz/assignment generation};
 
-% ════════════════════════════════════════
-\chead{Source Materials}
-% ════════════════════════════════════════
+% Concept 4: Quick Start
+\node[text=crimson, font=\normalsize\bfseries] at (11.0,1.5) {Quick Start};
+\node[text=navy, font=\scriptsize, anchor=north west, text width=4.5cm, align=left] at (9.0,1.0) {
+\textbf{1.} \texttt{source .env}\\
+\textbf{2.} \texttt{python canvas\_gui.py}\\
+\textbf{3.} Open \texttt{localhost:5050}\\
+\textbf{4.} Select your course\\[3pt]
+\textit{Needs:} Canvas API token, Python 3.10+};
 
-When generating quizzes or assignments with AI, add context from:
+% ════════════════════════════════════════════════════════
+% FOOTER
+% ════════════════════════════════════════════════════════
+\fill[crimson] (-14,-2.4) rectangle (14,-2.1);
+\node[text=gray, font=\tiny, anchor=west] at (-13.5,-2.6) {Canvas Course Manager v1.0 \quad Copyright \copyright{} 2025 Christopher Stubbs, Harvard University --- CC BY-NC 4.0};
+\node[text=gray, font=\tiny, anchor=east] at (13.5,-2.6) {github.com/astrostubbs/CanvasFrontEnd};
 
-\begin{tabular}{@{}ll@{}}
-\textbf{Canvas Pages} & Select from list \\
-\textbf{Assignments} & Select descriptions \\
-\textbf{Local Files} & Browse \& select \\
-\textbf{Free Text} & Paste/type notes \\
-\end{tabular}
-
-\vspace{2pt}
-Sources appear as removable chips.
-
-% ════════════════════════════════════════
-\chead{Split Editors}
-% ════════════════════════════════════════
-
-Assignment \& quiz editors show:\\
-\textbf{Left:} HTML source (editable)\\
-\textbf{Right:} Rendered preview (live)\\[2pt]
-All panel dividers are draggable.
-
-% ════════════════════════════════════════
-\chead{Key Workflows}
-% ════════════════════════════════════════
-
-\csub{AI Quiz from Readings}
-Files tab: find reading $\to$\\
-Quizzes: AI Generate $\to$\\
-Add source (local file) $\to$\\
-Set topic, \# questions $\to$\\
-Generate $\to$ edit $\to$ Create Draft
-
-\csub{Weekly Check-In}
-Students tab: check missing/late $\to$\\
-Calendar: see upcoming deadlines $\to$\\
-Assignments: update descriptions
-
-\csub{Review Before Publishing}
-Load quiz or assignment $\to$\\
-Click \textbf{AI Review} $\to$\\
-Fix flagged issues $\to$ Publish
-
-\end{multicols}
-
-\vspace{-2pt}
-\textcolor{crimson}{\rule{\textwidth}{0.5pt}}
-\begin{center}
-{\scriptsize\color{gray} Copyright \copyright{} 2025 Christopher Stubbs, Harvard University --- CC BY-NC 4.0 \quad|\quad \url{https://github.com/astrostubbs/CanvasFrontEnd}}
-\end{center}
+\end{tikzpicture}
 
 \end{document}
