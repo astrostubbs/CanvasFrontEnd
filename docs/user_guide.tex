@@ -1,0 +1,846 @@
+\documentclass[12pt,letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, fit, backgrounds, decorations.pathrounded}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{tcolorbox}
+\usepackage{fontenc}
+\usepackage{listings}
+\usepackage{titlesec}
+
+% ── Colors — Harvard crimson palette, black on white ───
+\definecolor{crimson}{HTML}{A51C30}
+\definecolor{navy}{HTML}{1E1E1E}
+\definecolor{darkbg}{HTML}{2D2D2D}
+\definecolor{accent}{HTML}{A51C30}
+\definecolor{teal}{HTML}{1D8348}
+\definecolor{purple}{HTML}{6C3483}
+\definecolor{amber}{HTML}{B7950B}
+\definecolor{lightgray}{HTML}{F5F5F5}
+\definecolor{harvardcrimson}{HTML}{A51C30}
+\definecolor{harvardblack}{HTML}{1E1E1E}
+
+% ── Hyperref setup ─────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=crimson,
+    urlcolor=accent,
+    pdftitle={Canvas Course Manager — User Guide},
+    pdfauthor={Harvard University},
+}
+
+% ── Headers/Footers ────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{gray}{Canvas Course Manager}}
+\fancyhead[R]{\small\textcolor{gray}{User Guide}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Section styling ────────────────────────────────────
+\titleformat{\section}{\Large\bfseries\color{crimson}}{}{0em}{}[\vspace{-0.5em}\textcolor{crimson}{\rule{\textwidth}{0.5pt}}]
+\titleformat{\subsection}{\large\bfseries\color{navy}}{}{0em}{}
+
+% ── Code listing style ─────────────────────────────────
+\lstset{
+    backgroundcolor=\color{lightgray},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{gray!50},
+    keywordstyle=\color{crimson},
+    stringstyle=\color{teal},
+    commentstyle=\color{gray},
+}
+
+% ── Custom boxes ───────────────────────────────────────
+\newtcolorbox{tipbox}{
+    colback=teal!8, colframe=teal, fonttitle=\bfseries,
+    title=Tip, arc=3pt, boxrule=0.5pt
+}
+\newtcolorbox{warnbox}{
+    colback=crimson!8, colframe=crimson, fonttitle=\bfseries,
+    title=Important, arc=3pt, boxrule=0.5pt
+}
+\newtcolorbox{notebox}{
+    colback=accent!8, colframe=accent, fonttitle=\bfseries,
+    title=Note, arc=3pt, boxrule=0.5pt
+}
+
+% ══════════════════════════════════════════════════════
+\begin{document}
+
+% ── Title Page ─────────────────────────────────────────
+\begin{titlepage}
+\centering
+\vspace*{1cm}
+
+% Harvard shield
+\begin{tikzpicture}
+    % Shield outline
+    \fill[harvardcrimson] (-1.8,0) -- (-1.8,2.5) -- (0,3.5) -- (1.8,2.5) -- (1.8,0) -- (1.5,-0.8) -- (0,-1.5) -- (-1.5,-0.8) -- cycle;
+    \fill[white] (-1.5,0.1) -- (-1.5,2.3) -- (0,3.15) -- (1.5,2.3) -- (1.5,0.1) -- (1.25,-0.6) -- (0,-1.15) -- (-1.25,-0.6) -- cycle;
+    \fill[harvardcrimson] (-1.2,0.2) -- (-1.2,2.1) -- (0,2.85) -- (1.2,2.1) -- (1.2,0.2) -- (1.0,-0.4) -- (0,-0.85) -- (-1.0,-0.4) -- cycle;
+    % VE RI TAS text on three books
+    \fill[white, rounded corners=1pt] (-1.0,1.55) rectangle (-0.1,2.15);
+    \fill[white, rounded corners=1pt] (0.1,1.55) rectangle (1.0,2.15);
+    \fill[white, rounded corners=1pt] (-0.55,0.55) rectangle (0.55,1.15);
+    \node[font=\bfseries\scriptsize, text=harvardcrimson] at (-0.55,1.85) {VE};
+    \node[font=\bfseries\scriptsize, text=harvardcrimson] at (0.55,1.85) {RI};
+    \node[font=\bfseries\scriptsize, text=harvardcrimson] at (0,0.85) {TAS};
+\end{tikzpicture}
+
+\vspace{1cm}
+{\Huge\bfseries\color{harvardcrimson} Canvas Course Manager}
+
+\vspace{0.4cm}
+{\LARGE User Guide}
+
+\vspace{0.3cm}
+{\large Version 1.0}
+
+\vspace{0.2cm}
+\textcolor{gray}{\rule{0.4\textwidth}{0.5pt}}
+
+\vspace{2cm}
+
+% Clean UI overview diagram
+\begin{tikzpicture}[scale=0.85]
+    % Outer frame
+    \draw[gray!40, thick, rounded corners=4pt] (0,0) rectangle (14,6);
+    % Header
+    \fill[harvardcrimson!10, rounded corners=2pt] (0.3,5.2) rectangle (13.7,5.8);
+    \node[text=harvardcrimson, font=\small\bfseries, anchor=west] at (0.5,5.5) {Canvas Course Manager};
+    \fill[gray!15, rounded corners=2pt] (5,5.3) rectangle (10,5.7);
+    \node[text=gray, font=\scriptsize] at (7.5,5.5) {Select course...};
+    % Tab bar
+    \foreach \x/\w/\label/\active in {0.3/1.2/Browse/1, 1.7/1.5/Calendar/0, 3.4/1.5/Students/0, 5.1/1.0/Files/0, 6.3/1.8/Assignments/0, 8.3/1.3/Quizzes/0, 9.8/1.8/LaTeX/0, 11.8/1.7/AI Assist/0} {
+        \ifnum\active=1
+            \node[text=harvardcrimson, font=\scriptsize\bfseries] at (\x+\w/2,4.8) {\label};
+            \draw[harvardcrimson, very thick] (\x,4.6) -- (\x+\w,4.6);
+        \else
+            \node[text=gray, font=\scriptsize] at (\x+\w/2,4.8) {\label};
+        \fi
+    }
+    % Content area
+    \draw[gray!30] (0.3,0.3) rectangle (13.7,4.4);
+    \node[text=gray!60, font=\small] at (7,2.4) {\textit{8 integrated tools for Canvas course management}};
+\end{tikzpicture}
+
+\vfill
+{\Large Harvard University}\\[0.3cm]
+{\large Christopher Stubbs}\\[0.3cm]
+{\today}
+
+\vspace{0.5cm}
+{\footnotesize\textcolor{gray}{Licensed under CC BY-NC 4.0 --- Non-commercial use only}}
+\end{titlepage}
+
+% ── Table of Contents ──────────────────────────────────
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════
+\section{Getting Started}
+% ══════════════════════════════════════════════════════
+
+\subsection{Overview}
+
+Canvas Course Manager is a locally-run web application that gives instructors a unified interface for managing Canvas LMS courses. Instead of navigating between multiple Canvas web pages, you get a single dashboard with tabs for browsing course content, managing files, editing assignments and quizzes, tracking student progress, and viewing a course calendar.
+
+\begin{center}
+\begin{tikzpicture}[
+    box/.style={draw=accent, fill=navy!15, rounded corners=3pt, minimum width=2.2cm, minimum height=0.8cm, text=darkbg, font=\small, align=center},
+    arrow/.style={-{Stealth[length=3mm]}, thick, accent}
+]
+    \node[box] (browser) at (0,0) {Your\\Browser};
+    \node[box] (flask) at (4,0) {Flask\\Server};
+    \node[box] (canvas) at (8,0) {Canvas\\LMS API};
+    \node[box, fill=crimson!15] (local) at (4,-2) {Local\\Files};
+    \draw[arrow] (browser) -- (flask);
+    \draw[arrow] (flask) -- (canvas);
+    \draw[arrow] (flask) -- (local);
+    \node[font=\tiny, text=gray] at (2,0.3) {localhost:5050};
+    \node[font=\tiny, text=gray] at (6,0.3) {REST API};
+\end{tikzpicture}
+\end{center}
+
+The Flask server acts as a proxy between your browser and the Canvas API, handling authentication and parallel data fetching to keep the UI responsive.
+
+\subsection{Installation}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Clone the repository:}
+\begin{lstlisting}[language=bash]
+git clone https://github.com/astrostubbs/CanvasFrontEnd.git
+cd CanvasFrontEnd
+\end{lstlisting}
+
+    \item \textbf{Install Python dependencies:}
+\begin{lstlisting}[language=bash]
+pip install -r requirements.txt
+\end{lstlisting}
+
+    \item \textbf{Configure your Canvas API token} (see Section~\ref{sec:apikey}).
+
+    \item \textbf{Run the server:}
+\begin{lstlisting}[language=bash]
+set -a; source .env; set +a
+python canvas_gui.py
+\end{lstlisting}
+
+    \item Open \url{http://localhost:5050} in your browser.
+\end{enumerate}
+
+\subsection{Obtaining a Canvas API Token}
+\label{sec:apikey}
+
+\begin{enumerate}[leftmargin=*]
+    \item Log in to your Canvas instance (e.g., \texttt{canvas.instructure.com}).
+    \item Navigate to \textbf{Account} $\rightarrow$ \textbf{Settings}.
+    \item Scroll down to \textbf{Approved Integrations}.
+    \item Click \textbf{+ New Access Token}.
+    \item Enter a purpose (e.g., ``Course Manager'') and optionally set an expiry date.
+    \item Click \textbf{Generate Token} and copy the token immediately.
+\end{enumerate}
+
+\begin{warnbox}
+Your API token grants full access to your Canvas account. Never commit it to version control or share it. Store it in a \texttt{.env} file (which is git-ignored) or export it as an environment variable.
+\end{warnbox}
+
+\subsection{Environment Configuration}
+
+Copy the example configuration and fill in your values:
+
+\begin{lstlisting}[language=bash]
+cp .env.example .env
+\end{lstlisting}
+
+Edit \texttt{.env} with your settings:
+
+\begin{lstlisting}
+CANVAS_API_TOKEN=1234~AbCdEfGhIjKlMnOpQrStUvWxYz
+CANVAS_API_URL=https://canvas.instructure.com/api/v1
+LOCAL_ROOT=~/Documents/MyCourse
+\end{lstlisting}
+
+\begin{table}[h]
+\centering
+\caption{Environment Variables}
+\begin{tabular}{lll}
+\toprule
+\textbf{Variable} & \textbf{Required} & \textbf{Description} \\
+\midrule
+\texttt{CANVAS\_API\_TOKEN} & Yes & Your Canvas personal access token \\
+\texttt{CANVAS\_API\_URL} & Yes & Canvas API base URL (with \texttt{/api/v1}) \\
+\texttt{LOCAL\_ROOT} & No & Root directory for local file browser \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ══════════════════════════════════════════════════════
+\section{The Interface}
+% ══════════════════════════════════════════════════════
+
+When you first open the application, you see a header with a course selector and a row of seven tabs. Select a course from the dropdown to populate all tabs with that course's data.
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    % Outer frame
+    \fill[gray!10, rounded corners=4pt] (0,0) rectangle (14,9);
+    % Header
+    \fill[gray!20, rounded corners=2pt] (0.3,8) rectangle (13.7,8.7);
+    \node[text=crimson, font=\small\bfseries, anchor=west] at (0.5,8.35) {Canvas Course Manager};
+    \fill[gray!20, rounded corners=2pt] (5,8.1) rectangle (10,8.6);
+    \node[text=black, font=\scriptsize] at (7.5,8.35) {ASTRO17: Stellar Astrophysics (Fall 2025)};
+    % Tab bar with labels
+    \foreach \x/\w/\label/\active in {0.3/1.5/Browse/1, 2.0/1.7/Calendar/0, 3.9/1.7/Students/0, 5.8/1.2/Files/0, 7.2/2.0/Assignments/0, 9.4/1.5/Quizzes/0, 11.1/2.4/AI Assistant/0} {
+        \ifnum\active=1
+            \node[text=crimson, font=\scriptsize\bfseries] at (\x+\w/2,7.6) {\label};
+            \draw[crimson, very thick] (\x,7.35) -- (\x+\w,7.35);
+        \else
+            \node[text=gray, font=\scriptsize] at (\x+\w/2,7.6) {\label};
+        \fi
+    }
+    % Annotations
+    \draw[crimson, thick, -{Stealth}] (7.5,9.3) -- (7.5,8.7);
+    \node[text=crimson, font=\scriptsize, anchor=south] at (7.5,9.3) {Course selector};
+    \draw[crimson, thick, -{Stealth}] (14.5,7.6) -- (13.8,7.6);
+    \node[text=crimson, font=\scriptsize, anchor=west] at (14.5,7.6) {Tab bar};
+    % Content area
+    \fill[gray!12, rounded corners=2pt] (0.3,0.6) rectangle (13.7,7.1);
+    \node[text=black, font=\small] at (7,4) {Tab content area};
+    % Status bar
+    \fill[gray!20, rounded corners=2pt] (0.3,0.1) rectangle (13.7,0.5);
+    \node[text=gray, font=\tiny, anchor=west] at (0.5,0.3) {Ready};
+\end{tikzpicture}
+\end{center}
+
+The tabs are:
+\begin{enumerate}
+    \item \textbf{Browse} — Course structure overview with expandable modules
+    \item \textbf{Calendar} — Month-by-month calendar of assignments and quizzes
+    \item \textbf{Students} — Student performance analytics and progress tracking
+    \item \textbf{Files} — Two-panel file manager (local + Canvas)
+    \item \textbf{Assignments} — Full-screen assignment editor
+    \item \textbf{Quizzes} — Full-screen quiz and question editor
+    \item \textbf{Page Editor} — Create and edit Canvas pages
+    \item \textbf{LaTeX $\to$ Canvas} — Convert \LaTeX{} equations to Canvas format with live preview
+    \item \textbf{AI Assistant} — Chat interface powered by Claude
+\end{enumerate}
+
+
+% ══════════════════════════════════════════════════════
+\section{Browse Tab}
+% ══════════════════════════════════════════════════════
+
+The Browse tab shows a hierarchical view of your course content.
+
+\subsection{Global Links}
+
+At the top, quick-access links open the Canvas web interface for common pages: the course home, gradebook, syllabus, all files, and the people list.
+
+\subsection{Module Tree}
+
+Below the links, each module appears as an expandable row. Click a module to load and display its contents, \textbf{grouped by type}:
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    \fill[gray!10, rounded corners=3pt] (0,0) rectangle (10,5.5);
+    % Module header
+    \fill[harvardcrimson!15, rounded corners=2pt] (0.3,4.7) rectangle (9.7,5.2);
+    \node[text=crimson, font=\small\bfseries, anchor=west] at (0.5,4.95) {$\blacktriangledown$ Module 2: Data Analysis};
+    \node[text=gray, font=\tiny, anchor=east] at (9.5,4.95) {8 items};
+    % Type groups
+    \node[text=gray, font=\tiny\bfseries, anchor=west] at (1.0,4.3) {ASSIGNMENTS (3)};
+    \foreach \y/\name in {3.9/Problem Set 2: Regression, 3.5/Lab: Linear Models, 3.1/Homework 2 Revisions} {
+        \node[text=purple, font=\tiny, anchor=west] at (1.3,\y) {\guillemotright};
+        \node[text=black, font=\scriptsize, anchor=west] at (1.7,\y) {\name};
+    }
+    \node[text=gray, font=\tiny\bfseries, anchor=west] at (1.0,2.6) {QUIZZES (1)};
+    \node[text=amber, font=\tiny, anchor=west] at (1.3,2.2) {?};
+    \node[text=black, font=\scriptsize, anchor=west] at (1.7,2.2) {Module 2 Review Quiz};
+    \node[text=gray, font=\tiny\bfseries, anchor=west] at (1.0,1.7) {PAGES (2)};
+    \foreach \y/\name in {1.3/Lecture Notes: OLS, 0.9/Reading: Chapter 4} {
+        \node[text=blue!60, font=\tiny, anchor=west] at (1.3,\y) {\P};
+        \node[text=black, font=\scriptsize, anchor=west] at (1.7,\y) {\name};
+    }
+    \node[text=gray, font=\tiny\bfseries, anchor=west] at (1.0,0.4) {FILES (2)};
+    \node[text=teal, font=\tiny, anchor=west] at (1.3,0.1) {\S};
+    \node[text=black, font=\scriptsize, anchor=west] at (1.7,0.1) {dataset.csv, notebook.ipynb};
+\end{tikzpicture}
+\end{center}
+
+\begin{tipbox}
+Click any item to open it directly in Canvas in a new browser tab. Items are lazy-loaded — the module contents are only fetched from Canvas when you click to expand the module.
+\end{tipbox}
+
+
+% ══════════════════════════════════════════════════════
+\section{Calendar Tab}
+% ══════════════════════════════════════════════════════
+
+The Calendar tab provides a month-by-month view of your course schedule.
+
+\subsection{Navigation}
+
+Use the \textbf{Prev}/\textbf{Next} buttons to move between months, or click \textbf{Today} to jump to the current month.
+
+\subsection{Events}
+
+\begin{itemize}[leftmargin=*]
+    \item \textcolor{crimson}{\textbf{Assignment due dates}} appear as red-tinted badges on their due date.
+    \item \textcolor{purple}{\textbf{Availability windows}} are shown as purple markers on the unlock date (when the assignment becomes available).
+    \item \textcolor{amber}{\textbf{Quiz due dates}} appear as amber/yellow badges.
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.7]
+    \fill[gray!10, rounded corners=3pt] (0,0) rectangle (14,8);
+    % Nav
+    \fill[gray!20, rounded corners=2pt] (0.5,7) rectangle (2.5,7.5);
+    \node[text=black, font=\tiny] at (1.5,7.25) {$\blacktriangleleft$ Prev};
+    \node[text=black, font=\small\bfseries] at (7,7.25) {March 2025};
+    \fill[gray!20, rounded corners=2pt] (11.5,7) rectangle (13.5,7.5);
+    \node[text=black, font=\tiny] at (12.5,7.25) {Next $\blacktriangleright$};
+    % Day headers
+    \foreach \x/\d in {1/Sun, 3/Mon, 5/Tue, 7/Wed, 9/Thu, 11/Fri, 13/Sat} {
+        \node[text=gray, font=\tiny\bfseries] at (\x,6.5) {\d};
+    }
+    % Grid cells (simplified week)
+    \foreach \x in {0.2, 2.2, 4.2, 6.2, 8.2, 10.2, 12.2} {
+        \foreach \y in {4.5, 2.8, 1.1} {
+            \fill[navy, rounded corners=1pt] (\x,\y) rectangle (\x+1.6,\y+1.5);
+        }
+    }
+    % Sample events
+    % Assignment due on Wed
+    \fill[crimson!25, rounded corners=1pt] (6.4,5.2) rectangle (7.6,5.5);
+    \node[text=crimson, font=\tiny] at (7,5.35) {PS3 due};
+    % Quiz on Fri
+    \fill[amber!25, rounded corners=1pt] (10.4,3.5) rectangle (11.6,3.8);
+    \node[text=amber, font=\tiny] at (11,3.65) {Quiz 2};
+    % Availability start on Mon
+    \fill[purple!20, rounded corners=1pt] (2.4,3.5) rectangle (3.6,3.8);
+    \node[text=purple, font=\tiny] at (3,3.65) {$\blacktriangleright$ PS4};
+    % Today marker
+    \draw[crimson, thick] (8.2,4.5) rectangle (9.8,6.0);
+    \node[text=gray, font=\tiny, anchor=north west] at (8.3,5.9) {12};
+    \draw[crimson, thick, -{Stealth}] (9.8,6.3) -- (9.0,6.0);
+    \node[text=crimson, font=\tiny, anchor=west] at (9.9,6.3) {Today};
+\end{tikzpicture}
+\end{center}
+
+\begin{tipbox}
+Click any event badge to open it directly in Canvas. Hover over a badge to see the full name and point value.
+\end{tipbox}
+
+
+% ══════════════════════════════════════════════════════
+\section{Student Progress Tab}
+% ══════════════════════════════════════════════════════
+
+The Students tab provides a comprehensive analytics dashboard for tracking student performance. This is designed to answer the questions instructors ask most often: Who is falling behind? What's the grade distribution? Which assignments are students struggling with?
+
+\subsection{Summary Statistics}
+
+Five summary cards appear at the top:
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \foreach \x/\num/\label in {0/24/Students, 3/8/Graded Asgn, 6/82.3\%/Mean Score, 9/85.0\%/Median Score, 12/5/Missing} {
+        \fill[gray!15, rounded corners=3pt] (\x,0) rectangle (\x+2.5,2);
+        \node[text=crimson, font=\large\bfseries] at (\x+1.25,1.2) {\num};
+        \node[text=gray, font=\tiny] at (\x+1.25,0.5) {\label};
+    }
+\end{tikzpicture}
+\end{center}
+
+\subsection{Ranked Student Scores}
+
+A horizontal bar chart shows every student's current percentage score, ranked from highest to lowest. Bars are color-coded:
+\begin{itemize}
+    \item \textcolor{teal}{Green} ($\geq 90\%$),
+    \item \textcolor{amber}{Yellow} ($70$--$89\%$),
+    \item \textcolor{crimson}{Red} ($< 70\%$).
+\end{itemize}
+
+This makes it easy to spot students who may need additional support.
+
+\subsection{Grade Distribution}
+
+A histogram-style bar chart groups students into letter-grade buckets: A (90--100), B (80--89), C (70--79), D (60--69), F ($<60$). This gives you an at-a-glance view of the overall class performance distribution.
+
+\subsection{Missing Assignments}
+
+A sorted list of students who have missing submissions, ordered by the number of missing assignments (most first). Hover over a row to see which specific assignments are missing.
+
+\begin{warnbox}
+The ``missing'' flag comes from Canvas. An assignment is marked missing if it is past due and the student has not submitted anything. If you use ``on paper'' submission types, Canvas may incorrectly flag those as missing.
+\end{warnbox}
+
+\subsection{Late Submissions}
+
+Similar to the missing list, this shows students with late submissions and the count of late work.
+
+\subsection{Per-Assignment Averages}
+
+A bar chart showing the class average score for each graded assignment. This helps identify assignments that were particularly challenging (low average) or straightforward (high average).
+
+
+% ══════════════════════════════════════════════════════
+\section{File Transfer}
+% ══════════════════════════════════════════════════════
+
+The Files tab provides a two-panel file manager: your local files on the left, Canvas course files on the right.
+
+\begin{center}
+\begin{tikzpicture}[scale=0.75]
+    \fill[gray!10, rounded corners=3pt] (0,0) rectangle (14,7);
+    % Left panel
+    \fill[gray!20, rounded corners=2pt] (0.3,5.8) rectangle (6.8,6.5);
+    \node[text=black, font=\scriptsize\bfseries, anchor=west] at (0.5,6.15) {Local Files};
+    \node[text=gray, font=\tiny, anchor=east] at (6.6,6.15) {\textasciitilde/Desktop/MyCourse};
+    \fill[gray!12, rounded corners=2pt] (0.3,0.3) rectangle (6.8,5.6);
+    % Files
+    \foreach \y/\icon/\name in {5.1/dir/lectures, 4.6/dir/problem\_sets, 4.1/py/analysis.py, 3.6/pdf/syllabus.pdf} {
+        \node[text=black, font=\scriptsize, anchor=west] at (0.8,\y) {\name};
+    }
+    % Divider
+    \draw[accent, thick] (7,0.3) -- (7,6.5);
+    % Right panel
+    \fill[gray!20, rounded corners=2pt] (7.2,5.8) rectangle (13.7,6.5);
+    \node[text=black, font=\scriptsize\bfseries, anchor=west] at (7.4,6.15) {Canvas Files};
+    \fill[gray!12, rounded corners=2pt] (7.2,0.3) rectangle (13.7,5.6);
+    \foreach \y/\name in {5.1/course files, 4.6/unfiled, 4.1/Submitted} {
+        \node[text=black, font=\scriptsize, anchor=west] at (7.7,\y) {\name};
+    }
+    % Drag arrow
+    \draw[crimson, very thick, -{Stealth}, dashed] (4,3.0) -- (9,3.0);
+    \node[text=crimson, font=\scriptsize, anchor=south] at (6.5,3.1) {Drag \& Drop};
+\end{tikzpicture}
+\end{center}
+
+\subsection{Uploading Files to Canvas}
+
+\begin{enumerate}[leftmargin=*]
+    \item In the left panel, locate the file you want to upload.
+    \item \textbf{Drag} the file from the left panel and \textbf{drop} it onto a Canvas folder in the right panel.
+    \item A confirmation dialog appears letting you choose the destination folder.
+    \item Click \textbf{Upload} to transfer the file.
+\end{enumerate}
+
+The upload uses Canvas's three-step upload process (notify, upload, confirm) and handles it automatically.
+
+\subsection{Browsing Canvas Files}
+
+Click any folder in the right panel to expand it and see its contents. Click a file to open/download it in a new tab.
+
+\begin{tipbox}
+The local file panel starts at the directory specified by the \texttt{LOCAL\_ROOT} environment variable. Set this to your course's working directory for quick access.
+\end{tipbox}
+
+
+% ══════════════════════════════════════════════════════
+\section{Assignment Editing}
+% ══════════════════════════════════════════════════════
+
+The Assignments tab provides a full-screen editor with a sidebar list and a main editing area.
+
+\begin{center}
+\begin{tikzpicture}[scale=0.75]
+    \fill[gray!10, rounded corners=3pt] (0,0) rectangle (14,7);
+    % Sidebar
+    \fill[gray!15, rounded corners=2pt] (0.3,0.3) rectangle (3.5,6.7);
+    \node[text=gray, font=\tiny\bfseries] at (1.9,6.3) {ASSIGNMENTS};
+    \foreach \y/\name/\sel in {5.7/Problem Set 1/0, 5.2/Problem Set 2/1, 4.7/Lab Report/0, 4.2/Final Project/0} {
+        \ifnum\sel=1
+            \fill[navy, rounded corners=1pt] (0.5,\y-0.2) rectangle (3.3,\y+0.15);
+            \draw[crimson, thick] (0.5,\y-0.2) rectangle (3.3,\y+0.15);
+        \fi
+        \node[text=black, font=\tiny, anchor=west] at (0.7,\y) {\name};
+    }
+    \fill[crimson, rounded corners=2pt] (2.3,6.1) rectangle (3.3,6.5);
+    \node[text=white, font=\tiny\bfseries] at (2.8,6.3) {+ New};
+    % Editor main
+    \fill[gray!12, rounded corners=2pt] (3.8,0.3) rectangle (13.7,6.7);
+    \node[text=crimson, font=\small\bfseries, anchor=west] at (4.2,6.2) {Edit Assignment};
+    % Form fields
+    \fill[gray!20, rounded corners=1pt] (4.2,5.3) rectangle (13.2,5.8);
+    \node[text=black, font=\tiny, anchor=west] at (4.4,5.55) {Problem Set 2};
+    \node[text=gray, font=\tiny, anchor=west] at (4.2,6.0) {\textsc{assignment name}};
+    % Date row
+    \foreach \x/\label/\val in {4.2/Due Date/Mar 15, 7.2/Available From/Mar 1, 10.2/Until/Mar 20} {
+        \node[text=gray, font=\tiny, anchor=west] at (\x,4.7) {\textsc{\label}};
+        \fill[gray!20, rounded corners=1pt] (\x,4.1) rectangle (\x+2.7,4.5);
+        \node[text=black, font=\tiny, anchor=west] at (\x+0.1,4.3) {\val};
+    }
+    % Buttons
+    \fill[teal, rounded corners=2pt] (4.2,0.6) rectangle (5.8,1.0);
+    \node[text=darkbg, font=\tiny\bfseries] at (5,0.8) {Save};
+    \fill[gray!50, rounded corners=2pt] (6.2,0.6) rectangle (8.0,1.0);
+    \node[text=white, font=\tiny] at (7.1,0.8) {Unpublish};
+    \fill[crimson, rounded corners=2pt] (8.4,0.6) rectangle (9.8,1.0);
+    \node[text=white, font=\tiny] at (9.1,0.8) {Delete};
+\end{tikzpicture}
+\end{center}
+
+\subsection{Editing an Existing Assignment}
+
+\begin{enumerate}[leftmargin=*]
+    \item Click an assignment in the sidebar to load it into the editor.
+    \item Edit any field: name, description, due date, availability window, points, grading type.
+    \item A green \textbf{Save Changes} button appears when you modify any field.
+    \item Click \textbf{Save Changes} to push the update to Canvas.
+\end{enumerate}
+
+\subsection{Creating a New Assignment}
+
+\begin{enumerate}[leftmargin=*]
+    \item Click the \textbf{+ New} button at the top of the sidebar.
+    \item Fill in the assignment name (required), description, due date, points, submission type, and grading type.
+    \item Click \textbf{Create Assignment}. It will be created as a draft (unpublished).
+    \item Publish it when ready using the \textbf{Publish} button in the editor.
+\end{enumerate}
+
+\subsection{Publishing and Deleting}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Publish/Unpublish:} Toggle the publication state directly from the editor.
+    \item \textbf{Delete:} Click the red \textbf{Delete} button. A confirmation dialog will appear.
+    \item \textbf{Open in Canvas:} A link button opens the assignment in the Canvas web UI.
+\end{itemize}
+
+
+% ══════════════════════════════════════════════════════
+\section{Quiz Editing}
+% ══════════════════════════════════════════════════════
+
+The Quizzes tab has the same sidebar-plus-editor layout. Selecting a quiz loads all its questions as editable cards.
+
+\subsection{Editing Questions}
+
+Each question card shows:
+\begin{itemize}[leftmargin=*]
+    \item The question number and type (Multiple Choice, True/False, Essay, etc.)
+    \item An editable text area for the question text (supports HTML)
+    \item An inline points input
+    \item For multiple-choice questions: radio buttons to select the correct answer, with editable answer text fields
+\end{itemize}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    \fill[gray!15, rounded corners=3pt] (0,0) rectangle (10,4.5);
+    % Header
+    \node[text=crimson, font=\small\bfseries, anchor=west] at (0.3,4.0) {Q1};
+    \fill[accent, rounded corners=8pt] (1.0,3.8) rectangle (3.5,4.2);
+    \node[text=gray, font=\tiny] at (2.25,4.0) {Multiple Choice};
+    \node[text=gray, font=\tiny, anchor=east] at (8.5,4.0) {Pts:};
+    \fill[gray!20, rounded corners=2pt] (8.6,3.8) rectangle (9.4,4.2);
+    \node[text=black, font=\tiny] at (9.0,4.0) {2};
+    % Question text
+    \fill[gray!20, rounded corners=2pt] (0.3,2.8) rectangle (9.7,3.5);
+    \node[text=black, font=\scriptsize, anchor=west] at (0.5,3.15) {What is the Schwarzschild radius of a 10 solar mass black hole?};
+    % Answers
+    \foreach \y/\label/\correct in {2.3/29.5 km/1, 1.8/14.7 km/0, 1.3/59.0 km/0, 0.8/3.0 km/0} {
+        \ifnum\correct=1
+            \fill[teal!20, rounded corners=1pt] (0.3,\y-0.2) rectangle (9.7,\y+0.15);
+            \node[text=teal, font=\tiny, anchor=west] at (0.5,\y) {$\bigodot$};
+        \else
+            \node[text=gray, font=\tiny, anchor=west] at (0.5,\y) {$\bigcirc$};
+        \fi
+        \node[text=black, font=\scriptsize, anchor=west] at (1.0,\y) {\label};
+    }
+    % Save button
+    \fill[teal, rounded corners=2pt] (9.0,3.8) rectangle (9.7,4.2);
+    \node[text=darkbg, font=\tiny\bfseries] at (9.35,4.0) {Save};
+\end{tikzpicture}
+\end{center}
+
+\subsection{Workflow: Edit and Save}
+
+\begin{enumerate}[leftmargin=*]
+    \item Modify the question text, points, or answer text.
+    \item For multiple-choice: click the radio button next to the new correct answer.
+    \item The card border turns \textcolor{crimson}{red} and a \textbf{Save} button appears.
+    \item Click \textbf{Save} to update the question on Canvas.
+\end{enumerate}
+
+\begin{notebox}
+Published quizzes \emph{can} be edited via the API as long as no student has started a submission attempt. If students have already taken the quiz, Canvas may restrict certain changes.
+\end{notebox}
+
+\subsection{Adding Questions}
+
+Click \textbf{+ Add Question} to expand a form where you can:
+\begin{itemize}[leftmargin=*]
+    \item Choose the question type (Multiple Choice, True/False, Short Answer, Essay, Numerical)
+    \item Enter the question text
+    \item Set point value
+    \item Add answer options and select the correct one
+    \item Click \textbf{Add Question} to save it to the quiz
+\end{itemize}
+
+\subsection{Creating a New Quiz}
+
+Click \textbf{+ New} in the sidebar to open the quiz creation form. Set the title, description, quiz type (graded, practice, survey), and optional time limit. New quizzes are created as drafts — publish when ready.
+
+
+% ══════════════════════════════════════════════════════
+\section{\LaTeX{} to Canvas Converter}
+% ══════════════════════════════════════════════════════
+
+The \textbf{LaTeX $\to$ Canvas} tab solves one of the most frustrating problems in Canvas: getting mathematical equations to display correctly. Canvas does not natively support \LaTeX{} input, but it does render equations via specially encoded image URLs. This tab automates the conversion.
+
+\subsection{How It Works}
+
+The tab provides a side-by-side editor:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Left panel:} An HTML editor where you write your page content.
+    \item \textbf{Right panel:} A live preview showing how Canvas will render it.
+\end{itemize}
+
+Canvas equations use a special URL format:
+\begin{lstlisting}
+https://canvas.instructure.com/equation_images/<encoded-latex>
+\end{lstlisting}
+where the \LaTeX{} is double-URL-encoded. This tab handles the encoding automatically.
+
+\subsection{Inserting Equations}
+
+\begin{enumerate}[leftmargin=*]
+    \item Type \LaTeX{} in the \textbf{equation bar} (e.g., \texttt{\textbackslash frac\{dN\}\{dM\} = kM\^{}\{-\textbackslash alpha\}}).
+    \item A live preview appears showing how the equation will render.
+    \item Click \textbf{Insert Equation} to insert the Canvas-formatted \texttt{<img>} tag at the cursor position in the editor.
+    \item The right panel updates to show the rendered result.
+\end{enumerate}
+
+\subsection{Quick-Insert Symbols}
+
+A toolbar provides one-click buttons for common \LaTeX{} symbols: fractions, square roots, integrals, summations, Greek letters ($\alpha, \beta, \gamma, \lambda$), solar mass ($M_\odot$), operators ($\pm, \approx, \leq, \geq, \partial, \nabla$), and more.
+
+\subsection{Batch Conversion}
+
+If you prefer to write content using \texttt{\$...\$} (inline) and \texttt{\$\$...\$\$} (display) delimiters, click \textbf{Convert All \$...\$} to automatically find all \LaTeX{} delimiters in the editor and replace them with Canvas equation image tags.
+
+\begin{tipbox}
+This is the fastest workflow: write your page content using familiar \LaTeX{} delimiters, then click one button to convert everything to Canvas format.
+\end{tipbox}
+
+\subsection{AI-Assisted \LaTeX{}}
+
+Click \textbf{AI Assist} and describe the equation you need in plain English (e.g., ``Stefan-Boltzmann law'' or ``integral of x squared from 0 to infinity''). Claude will generate the \LaTeX{} code and populate the equation bar for you.
+
+\subsection{Loading and Saving Canvas Pages}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Load from Canvas Page:} Fetches an existing page's HTML content into the editor for editing.
+    \item \textbf{Save to Canvas Page:} Pushes the editor content directly to a Canvas page.
+    \item \textbf{Copy HTML:} Copies the raw HTML to your clipboard for pasting elsewhere.
+\end{itemize}
+
+
+% ══════════════════════════════════════════════════════
+\section{AI Assistant}
+% ══════════════════════════════════════════════════════
+
+The AI Assistant tab provides a chat interface powered by Claude Code. It can interact with your Canvas course through MCP (Model Context Protocol) tools.
+
+\subsection{What It Can Do}
+
+\begin{itemize}[leftmargin=*]
+    \item Generate quiz questions on a topic
+    \item Write assignment descriptions and rubrics
+    \item Draft course announcements
+    \item Look up student enrollment and course data
+    \item Answer questions about Canvas course content
+\end{itemize}
+
+\subsection{Using the Chat}
+
+\begin{enumerate}[leftmargin=*]
+    \item Select a course from the dropdown (gives the AI context about which course to query).
+    \item Type your request in the text box or click a suggestion chip.
+    \item Press Enter or click Send.
+    \item The response streams in real-time.
+\end{enumerate}
+
+\subsection{MCP Setup}
+
+For the AI to access Canvas data directly, you need a Canvas MCP server configured. Create a \texttt{canvas.mcp.json} file in the project directory:
+
+\begin{lstlisting}[language={}]
+{
+    "type": "http",
+    "url": "https://your-mcp-server/mcp",
+    "headers": {
+        "X-Canvas-API-Token": "your_token",
+        "X-Canvas-API-URL": "https://your-canvas.instructure.com"
+    }
+}
+\end{lstlisting}
+
+\begin{warnbox}
+The \texttt{canvas.mcp.json} file contains your API token and is excluded from version control by \texttt{.gitignore}. Never commit this file.
+\end{warnbox}
+
+
+% ══════════════════════════════════════════════════════
+\section{Common Workflows}
+% ══════════════════════════════════════════════════════
+
+\subsection{Weekly Check-In: Are Students On Track?}
+
+\begin{enumerate}[leftmargin=*]
+    \item Open the \textbf{Students} tab.
+    \item Check the \textbf{Missing Assignments} card — follow up with students who have multiple missing items.
+    \item Review the \textbf{Grade Distribution} — if it's skewed low, consider reviewing the material.
+    \item Look at \textbf{Per-Assignment Averages} — a low average on a specific assignment may indicate unclear instructions.
+\end{enumerate}
+
+\subsection{Preparing Next Week's Content}
+
+\begin{enumerate}[leftmargin=*]
+    \item Open the \textbf{Calendar} tab to see what's due and when.
+    \item Switch to \textbf{Assignments} to create or edit upcoming assignments. Set due dates and availability windows.
+    \item Use the \textbf{Files} tab to upload any new materials (lecture slides, datasets, readings) by dragging from local to Canvas.
+    \item Switch to \textbf{Quizzes} to create a review quiz. Use \textbf{AI Assistant} to generate question ideas.
+\end{enumerate}
+
+\subsection{Creating a Quiz from Scratch}
+
+\begin{enumerate}[leftmargin=*]
+    \item Go to the \textbf{Quizzes} tab and click \textbf{+ New}.
+    \item Enter a title and set the quiz type (Graded Quiz, Practice Quiz, etc.).
+    \item Click \textbf{Create Quiz}.
+    \item Click \textbf{+ Add Question} and fill in the question details.
+    \item Repeat for each question.
+    \item When ready, click \textbf{Publish} to make it available to students.
+\end{enumerate}
+
+\subsection{Uploading Course Materials}
+
+\begin{enumerate}[leftmargin=*]
+    \item Go to the \textbf{Files} tab.
+    \item In the left panel, navigate to the file you want to upload.
+    \item Drag the file onto the target Canvas folder in the right panel.
+    \item Confirm the upload in the dialog.
+\end{enumerate}
+
+
+% ══════════════════════════════════════════════════════
+\section{Troubleshooting}
+% ══════════════════════════════════════════════════════
+
+\begin{table}[h]
+\centering
+\begin{tabular}{p{5cm}p{8cm}}
+\toprule
+\textbf{Problem} & \textbf{Solution} \\
+\midrule
+``API error: 401'' & Your Canvas API token is invalid or expired. Generate a new one and update \texttt{.env}. \\
+\addlinespace
+No courses appear in dropdown & Verify \texttt{CANVAS\_API\_URL} is correct and includes \texttt{/api/v1}. Ensure your token has teacher enrollment. \\
+\addlinespace
+AI Assistant: ``Claude CLI not found'' & Install Claude Code: \texttt{npm install -g @anthropic-ai/claude-code} \\
+\addlinespace
+AI Assistant: permission errors & Ensure \texttt{canvas.mcp.json} exists in the project directory with correct credentials. \\
+\addlinespace
+Port 5050 already in use & Another instance is running. Kill it: \texttt{lsof -ti:5050 | xargs kill -9} \\
+\addlinespace
+Student Progress shows no data & The course may not have graded assignments yet, or students haven't submitted work. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ══════════════════════════════════════════════════════
+\section{Security Considerations}
+% ══════════════════════════════════════════════════════
+
+\begin{itemize}[leftmargin=*]
+    \item The application runs \textbf{locally only} on \texttt{127.0.0.1:5050}. It is not designed for public deployment.
+    \item Your Canvas API token is never sent to any service other than your Canvas instance.
+    \item The \texttt{.gitignore} excludes \texttt{.env} and \texttt{canvas.mcp.json} to prevent accidental token commits.
+    \item The AI Assistant inherits your shell environment. Ensure your Anthropic/Bedrock API keys are set via environment variables, not hardcoded.
+    \item If you share this tool with others, remind them to generate their own API tokens.
+\end{itemize}
+
+
+\vfill
+\begin{center}
+\textcolor{gray}{\rule{0.5\textwidth}{0.5pt}}\\[0.5em]
+\textcolor{gray}{\small Canvas Course Manager --- User Guide v1.0}\\
+\textcolor{gray}{\small Copyright \copyright{} 2025 Christopher Stubbs, Harvard University}\\
+\textcolor{gray}{\small Licensed under CC BY-NC 4.0 --- \url{https://creativecommons.org/licenses/by-nc/4.0/}}\\
+\textcolor{gray}{\small\today}
+\end{center}
+
+\end{document}

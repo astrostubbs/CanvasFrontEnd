@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas Course Manager</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1e; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
+
+/* ── Header ─────────────────────────────────────────── */
+header { background: #1e1e2a; padding: 12px 20px; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #2a1520; }
+header h1 { font-size: 18px; color: #A51C30; white-space: nowrap; }
+header select { background: #2a1520; color: #e0e0e0; border: 1px solid #A51C30; padding: 6px 12px; border-radius: 4px; font-size: 14px; min-width: 300px; }
+header select:focus { outline: 2px solid #A51C30; }
+.header-info { margin-left: auto; font-size: 12px; color: #888; }
+
+/* ── Top-level Tabs ────────────────────────────────── */
+.main-tab-bar { display: flex; background: #1e1e2a; border-bottom: 2px solid #2a1520; padding: 0 12px; }
+.main-tab-btn { padding: 10px 24px; font-size: 13px; font-weight: 600; color: #888; background: transparent; border: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; margin-bottom: -2px; }
+.main-tab-btn:hover { color: #e0e0e0; background: rgba(165, 28, 48, 0.08); }
+.main-tab-btn.active { color: #A51C30; border-bottom-color: #A51C30; }
+
+/* ── Status Bar ─────────────────────────────────────── */
+#status-bar { background: #2a1520; padding: 6px 20px; font-size: 12px; color: #aaa; border-top: 1px solid #1e1e2a; display: flex; justify-content: space-between; }
+#status-bar .error { color: #A51C30; }
+#status-bar .success { color: #4ecca3; }
+
+/* ── Main Content Area ─────────────────────────────── */
+.main-content { flex: 1; overflow: hidden; display: flex; }
+.tab-view { display: none; flex: 1; overflow: hidden; }
+.tab-view.active { display: flex; }
+
+/* ── Two-panel layout (Files tab) ──────────────────── */
+.panels { display: flex; flex: 1; overflow: hidden; }
+.panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.panel:first-child { border-right: 2px solid #2a1520; }
+.panel-header { background: #1e1e2a; padding: 10px 16px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #2a1520; }
+.panel-header .icon { font-size: 18px; }
+.panel-header .path { font-weight: 400; color: #888; font-size: 12px; margin-left: auto; }
+.panel-body { flex: 1; overflow-y: auto; padding: 8px; }
+
+/* ── Full-screen editor layout ─────────────────────── */
+.editor-layout { display: flex; flex: 1; overflow: hidden; }
+.editor-sidebar { width: 280px; border-right: 1px solid #2a1520; overflow-y: auto; display: flex; flex-direction: column; }
+.editor-sidebar-header { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a1520; background: #1e1e2a; }
+.editor-sidebar-header span { font-weight: 600; font-size: 13px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+.editor-sidebar-list { flex: 1; overflow-y: auto; padding: 8px; }
+.editor-main { flex: 1; overflow-y: auto; padding: 20px; }
+
+/* ── Tree View ──────────────────────────────────────── */
+.tree { list-style: none; padding-left: 0; }
+.tree .tree { padding-left: 20px; }
+.tree-item { padding: 4px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
+.tree-item:hover { background: #1e1e2a; }
+.tree-item.selected { background: #2a1520; }
+.tree-item .icon { width: 16px; text-align: center; flex-shrink: 0; }
+.tree-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.tree-item .meta { color: #666; font-size: 11px; flex-shrink: 0; }
+.tree-item.directory > .icon { color: #f0c040; }
+.tree-item.file > .icon { color: #4ecca3; }
+.tree-item.module > .icon { color: #A51C30; }
+.tree-item.assignment > .icon { color: #a78bfa; }
+.tree-item.page > .icon { color: #60a5fa; }
+.tree-item.canvas-file > .icon { color: #4ecca3; }
+.tree-item.quiz > .icon { color: #f59e0b; }
+.tree-item.discussion > .icon { color: #34d399; }
+.tree-item.dragging { opacity: 0.4; }
+.tree-item.drag-over { background: #2a1520; outline: 2px dashed #A51C30; }
+
+/* ── Sections ───────────────────────────────────────── */
+.section-header { padding: 8px 12px; font-weight: 600; font-size: 13px; color: #A51C30; border-bottom: 1px solid #2a1520; margin-top: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.section-header:hover { background: #1e1e2a; }
+.section-header .toggle { transition: transform 0.2s; }
+.section-header.collapsed .toggle { transform: rotate(-90deg); }
+
+/* ── Global Links ───────────────────────────────────── */
+.global-links { display: flex; gap: 8px; padding: 8px 12px; flex-wrap: wrap; }
+.global-link { background: #2a1520; padding: 6px 14px; border-radius: 4px; font-size: 12px; color: #60a5fa; text-decoration: none; cursor: pointer; border: 1px solid transparent; }
+.global-link:hover { border-color: #A51C30; color: #A51C30; }
+
+/* ── Drop Zone ──────────────────────────────────────── */
+.drop-zone { border: 2px dashed #333; border-radius: 8px; padding: 20px; text-align: center; color: #666; margin: 8px; transition: all 0.2s; }
+.drop-zone.active { border-color: #A51C30; color: #A51C30; background: rgba(165, 28, 48, 0.1); }
+
+/* ── Forms ──────────────────────────────────────────── */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; color: #aaa; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-input { width: 100%; background: #2a1520; color: #e0e0e0; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-family: inherit; }
+.form-input:focus { outline: none; border-color: #A51C30; }
+textarea.form-input { min-height: 80px; resize: vertical; }
+select.form-input { cursor: pointer; }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+
+.btn { background: #A51C30; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.btn:hover { opacity: 0.9; }
+.btn.secondary { background: #333; }
+.btn.success { background: #4ecca3; color: #1a1a1e; }
+.btn.danger { background: #dc2626; }
+.btn.small { padding: 4px 12px; font-size: 12px; }
+.btn-group { display: flex; gap: 8px; margin-top: 12px; }
+
+/* ── List Items (quiz / assignment sidebar) ─────────── */
+.list-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; margin-bottom: 2px; }
+.list-item:hover { background: #1e1e2a; }
+.list-item.selected { background: #1e1e2a; border-color: #A51C30; }
+.list-item .item-title { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-item .item-meta { font-size: 11px; color: #888; }
+.badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; }
+.badge.published { background: #4ecca3; color: #1a1a1e; }
+.badge.draft { background: #333; color: #aaa; }
+
+/* ── Question Card ──────────────────────────────────── */
+.question-card { background: #1e1e2a; border: 1px solid #2a1520; border-radius: 6px; padding: 16px; margin-bottom: 12px; }
+.question-card .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.question-card .q-number { font-weight: 700; color: #A51C30; }
+.question-card .q-type { font-size: 11px; color: #888; background: #2a1520; padding: 2px 8px; border-radius: 10px; }
+.question-card textarea.form-input { font-size: 14px; line-height: 1.5; }
+.q-preview img.equation_image { display: inline; vertical-align: middle; max-height: 2em; filter: invert(1); }
+.q-preview em, .q-preview i { font-style: italic; color: #f0c040; }
+.q-preview strong, .q-preview b { font-weight: 700; }
+.q-preview p { margin: 4px 0; }
+.answer-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.answer-row .correct-mark { color: #4ecca3; font-weight: 700; width: 20px; }
+.answer-row .wrong-mark { color: #666; width: 20px; }
+.answer-row input[type="text"] { flex: 1; background: #2a1520; color: #e0e0e0; border: 1px solid #333; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
+.answer-row input[type="radio"], .answer-row input[type="checkbox"] { accent-color: #4ecca3; }
+.add-answer-btn { background: none; border: 1px dashed #333; color: #888; padding: 6px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 6px; font-size: 12px; }
+.add-answer-btn:hover { border-color: #A51C30; color: #A51C30; }
+
+/* ── Assignment Card ────────────────────────────────── */
+.assignment-card { background: #1e1e2a; border: 1px solid #2a1520; border-radius: 6px; padding: 20px; margin-bottom: 16px; }
+.assignment-card h3 { color: #A51C30; margin-bottom: 16px; font-size: 16px; }
+
+/* ── AI Chat ────────────────────────────────────────── */
+.chat-container { flex: 1; display: flex; flex-direction: column; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 12px; }
+.chat-msg { margin-bottom: 12px; }
+.chat-msg.user { text-align: right; }
+.chat-msg .bubble { display: inline-block; max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; text-align: left; white-space: pre-wrap; word-wrap: break-word; }
+.chat-msg.user .bubble { background: #2a1520; color: #e0e0e0; border-bottom-right-radius: 4px; }
+.chat-msg.assistant .bubble { background: #1e1e2a; border: 1px solid #2a1520; border-bottom-left-radius: 4px; }
+.chat-msg.system .bubble { background: rgba(165, 28, 48, 0.1); border: 1px solid #A51C30; color: #A51C30; font-size: 12px; }
+.chat-input-row { display: flex; gap: 8px; padding: 12px; background: #1e1e2a; border-top: 1px solid #2a1520; }
+.chat-input-row textarea { flex: 1; background: #2a1520; color: #e0e0e0; border: 1px solid #333; padding: 10px; border-radius: 6px; font-size: 14px; font-family: inherit; resize: none; min-height: 44px; max-height: 120px; }
+.chat-input-row textarea:focus { outline: none; border-color: #A51C30; }
+.chat-input-row .btn { align-self: flex-end; }
+.chat-suggestions { display: flex; gap: 6px; padding: 8px 12px; flex-wrap: wrap; }
+.chat-suggestion { background: #2a1520; border: 1px solid #333; color: #aaa; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; }
+.chat-suggestion:hover { border-color: #A51C30; color: #A51C30; }
+
+/* ── Modal ──────────────────────────────────────────── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.active { display: flex; }
+.modal { background: #1e1e2a; border: 1px solid #2a1520; border-radius: 8px; padding: 24px; min-width: 400px; max-width: 600px; }
+.modal h3 { margin-bottom: 16px; color: #A51C30; }
+.modal p { margin-bottom: 12px; font-size: 14px; }
+.modal select { background: #2a1520; color: #e0e0e0; border: 1px solid #333; padding: 8px; border-radius: 4px; width: 100%; margin-bottom: 12px; }
+
+/* ── Spinner ────────────────────────────────────────── */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #333; border-top-color: #A51C30; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Calendar ──────────────────────────────────────── */
+.cal-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.cal-nav button { background: #2a1520; color: #e0e0e0; border: 1px solid #333; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.cal-nav button:hover { border-color: #A51C30; }
+.cal-nav h3 { font-size: 16px; color: #e0e0e0; min-width: 200px; text-align: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-header { padding: 6px; text-align: center; font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; }
+.cal-cell { min-height: 80px; background: #1e1e2a; border-radius: 4px; padding: 4px 6px; position: relative; border: 1px solid transparent; }
+.cal-cell.today { border-color: #A51C30; }
+.cal-cell.other-month { opacity: 0.3; }
+.cal-day { font-size: 11px; color: #888; margin-bottom: 2px; }
+.cal-event { font-size: 10px; padding: 2px 4px; border-radius: 2px; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.cal-event:hover { opacity: 0.8; }
+.cal-event.assignment { background: rgba(167, 139, 250, 0.25); color: #a78bfa; border-left: 2px solid #a78bfa; }
+.cal-event.quiz { background: rgba(245, 158, 11, 0.25); color: #f59e0b; border-left: 2px solid #f59e0b; }
+.cal-event.assignment-bar { background: rgba(167, 139, 250, 0.12); border-left: 2px solid #a78bfa; color: #a78bfa; }
+.cal-legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; color: #888; }
+.cal-legend span { display: flex; align-items: center; gap: 4px; }
+.cal-legend .swatch { width: 12px; height: 12px; border-radius: 2px; }
+
+/* ── Student Progress ─────────────────────────────── */
+.progress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 1200px) { .progress-grid { grid-template-columns: 1fr; } }
+.progress-card { background: #1e1e2a; border: 1px solid #2a1520; border-radius: 8px; padding: 16px; }
+.progress-card h4 { color: #A51C30; margin-bottom: 12px; font-size: 14px; }
+.progress-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 12px; }
+.progress-bar-label { width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ccc; }
+.progress-bar-track { flex: 1; height: 16px; background: #2a1520; border-radius: 3px; overflow: hidden; position: relative; }
+.progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+.progress-bar-value { width: 50px; text-align: right; color: #aaa; font-size: 11px; }
+.progress-stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2a1520; font-size: 13px; }
+.progress-stat:last-child { border-bottom: none; }
+.progress-stat .label { color: #aaa; }
+.progress-stat .value { font-weight: 600; }
+.missing-list { max-height: 300px; overflow-y: auto; }
+.missing-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 4px; font-size: 12px; margin-bottom: 2px; }
+.missing-row:hover { background: #2a1520; }
+.missing-row .student { color: #ccc; flex: 1; }
+.missing-row .count { color: #A51C30; font-weight: 600; min-width: 30px; text-align: right; }
+.summary-stats { display: flex; gap: 12px; margin-bottom: 16px; }
+.summary-stat-card { flex: 1; background: #1e1e2a; border: 1px solid #2a1520; border-radius: 8px; padding: 16px; text-align: center; }
+.summary-stat-card .big-num { font-size: 28px; font-weight: 700; color: #A51C30; }
+.summary-stat-card .stat-label { font-size: 11px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── LaTeX Editor ─────────────────────────────────── */
+.latex-layout { display: flex; flex: 1; overflow: hidden; }
+.latex-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.latex-panel:first-child { border-right: 2px solid #2a1520; }
+.latex-toolbar { background: #1e1e2a; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #2a1520; flex-wrap: wrap; }
+.latex-toolbar .label { font-size: 12px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+.latex-editor { flex: 1; width: 100%; background: #2a1520; color: #e0e0e0; border: none; padding: 16px; font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: 13px; line-height: 1.6; resize: none; outline: none; }
+.latex-preview-pane { flex: 1; overflow-y: auto; padding: 20px; background: #fff; color: #333; font-family: "Lato", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.7; }
+.latex-preview-pane img.equation_image { display: inline; vertical-align: middle; max-height: 2.2em; }
+.latex-preview-pane p { margin: 0.5em 0; }
+.latex-preview-pane em { font-style: italic; }
+.latex-preview-pane strong { font-weight: 700; }
+.latex-preview-pane h2 { font-size: 1.4em; margin: 0.8em 0 0.3em; border-bottom: 1px solid #ddd; }
+.latex-preview-pane h3 { font-size: 1.2em; margin: 0.6em 0 0.3em; }
+.latex-preview-pane ul, .latex-preview-pane ol { margin: 0.5em 0; padding-left: 1.5em; }
+.eq-insert-row { display: flex; gap: 6px; align-items: center; }
+.eq-insert-row input { background: #2a1520; color: #e0e0e0; border: 1px solid #333; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-size: 12px; flex: 1; }
+.eq-insert-row input:focus { outline: none; border-color: #A51C30; }
+.eq-preview-inline { background: #fff; padding: 4px 8px; border-radius: 4px; min-width: 40px; min-height: 24px; display: flex; align-items: center; }
+
+/* ── Improved Browse Tree ─────────────────────────── */
+.module-type-group { padding-left: 20px; }
+.module-type-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px; margin-top: 4px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1a1a1e; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Canvas Course Manager</h1>
+    <select id="course-select"><option value="">Loading courses...</option></select>
+    <div class="header-info" id="header-info"></div>
+</header>
+
+<!-- Top-level tab bar -->
+<div class="main-tab-bar">
+    <button class="main-tab-btn active" data-tab="browse">Browse</button>
+    <button class="main-tab-btn" data-tab="calendar">Calendar</button>
+    <button class="main-tab-btn" data-tab="progress">Students</button>
+    <button class="main-tab-btn" data-tab="files">Files</button>
+    <button class="main-tab-btn" data-tab="assignments">Assignments</button>
+    <button class="main-tab-btn" data-tab="quizzes">Quizzes</button>
+    <button class="main-tab-btn" data-tab="pages">Page Editor</button>
+    <button class="main-tab-btn" data-tab="latex">LaTeX → Canvas</button>
+    <button class="main-tab-btn" data-tab="ai">AI Assistant</button>
+</div>
+
+<div class="main-content">
+
+    <!-- ═══ BROWSE TAB ═══ -->
+    <div class="tab-view active" id="view-browse">
+        <div style="flex:1; overflow-y:auto; padding:12px;" id="canvas-tree">
+            <div style="padding: 20px; color: #666;">Select a course to browse its contents.</div>
+        </div>
+    </div>
+
+    <!-- ═══ FILES TAB (two-panel) ═══ -->
+    <div class="tab-view" id="view-files">
+        <div class="panels">
+            <div class="panel" id="local-panel">
+                <div class="panel-header">
+                    <span class="icon">&#128187;</span> Local Files
+                    <span class="path" id="local-path"></span>
+                </div>
+                <div class="panel-body" id="local-tree">
+                    <div style="padding: 20px; color: #666;">Loading local files...</div>
+                </div>
+            </div>
+            <div class="panel" id="canvas-files-panel">
+                <div class="panel-header">
+                    <span class="icon">&#9729;</span> Canvas Files
+                    <span class="path" id="canvas-files-path">Select a course</span>
+                </div>
+                <div class="panel-body" id="canvas-files-tree">
+                    <div style="padding: 20px; color: #666;">Select a course to see its files.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ ASSIGNMENTS TAB (full-screen editor) ═══ -->
+    <div class="tab-view" id="view-assignments">
+        <div class="editor-layout">
+            <div class="editor-sidebar">
+                <div class="editor-sidebar-header">
+                    <span>Assignments</span>
+                    <button class="btn small" onclick="showNewAssignmentForm()">+ New</button>
+                </div>
+                <div class="editor-sidebar-list" id="assignment-list">
+                    <div style="padding: 12px; color: #666; font-size: 13px;">Select a course first</div>
+                </div>
+            </div>
+            <div class="editor-main" id="assignment-editor">
+                <div style="text-align: center; padding: 60px; color: #666;">
+                    <p style="font-size: 16px; margin-bottom: 8px;">Assignment Editor</p>
+                    <p style="font-size: 13px;">Select an assignment from the left or create a new one.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ QUIZZES TAB (full-screen editor) ═══ -->
+    <div class="tab-view" id="view-quizzes">
+        <div class="editor-layout">
+            <div class="editor-sidebar">
+                <div class="editor-sidebar-header">
+                    <span>Quizzes</span>
+                    <button class="btn small" onclick="showNewQuizForm()">+ New</button>
+                </div>
+                <div class="editor-sidebar-list" id="quiz-list">
+                    <div style="padding: 12px; color: #666; font-size: 13px;">Select a course first</div>
+                </div>
+            </div>
+            <div class="editor-main" id="quiz-editor">
+                <div style="text-align: center; padding: 60px; color: #666;">
+                    <p style="font-size: 16px; margin-bottom: 8px;">Quiz Editor</p>
+                    <p style="font-size: 13px;">Select a quiz from the left or create a new one.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ CALENDAR TAB ═══ -->
+    <div class="tab-view" id="view-calendar">
+        <div style="flex:1; overflow-y:auto; padding:16px;" id="calendar-container">
+            <div style="padding: 20px; color: #666;">Select a course to view the calendar.</div>
+        </div>
+    </div>
+
+    <!-- ═══ STUDENT PROGRESS TAB ═══ -->
+    <div class="tab-view" id="view-progress">
+        <div style="flex:1; overflow-y:auto; padding:16px;" id="progress-container">
+            <div style="padding: 20px; color: #666;">Select a course to view student progress.</div>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE EDITOR TAB ═══ -->
+    <div class="tab-view" id="view-pages">
+        <div class="editor-layout">
+            <div class="editor-sidebar">
+                <div class="editor-sidebar-header">
+                    <span>Pages</span>
+                    <button class="btn small" onclick="showNewPageForm()">+ New</button>
+                </div>
+                <div class="editor-sidebar-list" id="page-list">
+                    <div style="padding: 12px; color: #666; font-size: 13px;">Select a course first</div>
+                </div>
+            </div>
+            <div class="editor-main" id="page-editor">
+                <div style="text-align: center; padding: 60px; color: #666;">
+                    <p style="font-size: 16px; margin-bottom: 8px;">Page Editor</p>
+                    <p style="font-size: 13px;">Select a page from the left or create a new one.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ LATEX-TO-CANVAS TAB ═══ -->
+    <div class="tab-view" id="view-latex">
+        <div class="latex-layout">
+            <!-- Left: HTML/LaTeX Editor -->
+            <div class="latex-panel">
+                <div class="latex-toolbar">
+                    <span class="label">HTML + LaTeX Editor</span>
+                    <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+                        <button class="btn small" onclick="insertEquationAtCursor()" title="Convert LaTeX in the equation box to Canvas format and insert">Insert Equation</button>
+                        <button class="btn small secondary" onclick="convertAllLatex()" title="Find all $...$ and $$...$$ in the editor and convert to Canvas equation images">Convert All $...$</button>
+                        <button class="btn small secondary" onclick="aiLatexHelp()" title="Ask AI to help write LaTeX">AI Assist</button>
+                    </div>
+                </div>
+                <div class="latex-toolbar" style="border-bottom: 1px solid #2a1520; padding: 6px 12px;">
+                    <div class="eq-insert-row" style="flex:1;">
+                        <span style="font-size:11px; color:#888; white-space:nowrap;">LaTeX equation:</span>
+                        <input type="text" id="latex-eq-input" placeholder="e.g. \frac{dN}{dM} = kM^{-\alpha}" onkeydown="if(event.key==='Enter'){insertEquationAtCursor();}" oninput="previewEquation()">
+                        <div class="eq-preview-inline" id="latex-eq-preview"><span style="color:#999; font-size:11px;">preview</span></div>
+                    </div>
+                </div>
+                <div class="latex-toolbar" style="padding: 4px 12px; gap: 4px;">
+                    <span style="font-size:10px; color:#666;">Quick insert:</span>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\frac{a}{b}')">frac</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\sqrt{x}')">sqrt</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\int_{a}^{b}')">int</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\sum_{i=1}^{n}')">sum</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\alpha')">alpha</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\beta')">beta</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\gamma')">gamma</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\lambda')">lambda</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('M_{\\odot}')">Msun</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\times')">times</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\pm')">pm</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\approx')">approx</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\leq')">leq</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\geq')">geq</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\partial')">partial</button>
+                    <button class="btn small secondary" style="padding:2px 8px; font-family:monospace; font-size:11px;" onclick="quickLatex('\\nabla')">nabla</button>
+                </div>
+                <textarea class="latex-editor" id="latex-editor" placeholder="Type or paste HTML content here. Use the equation bar above to insert Canvas-formatted equations.
+
+Example:
+<p>The luminosity of a star is given by:</p>
+<p>[click 'Insert Equation' with L = 4\pi R^2 \sigma T^4 in the box above]</p>
+
+Or type inline LaTeX with $...$ delimiters and click 'Convert All $...$':
+<p>The flux is $F = L / (4\pi d^2)$ where $d$ is the distance.</p>" oninput="updateLatexPreview()"></textarea>
+                <div class="latex-toolbar" style="justify-content: space-between;">
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn small" onclick="copyEditorHtml()">Copy HTML</button>
+                        <button class="btn small secondary" onclick="loadCanvasPage()">Load from Canvas Page</button>
+                        <button class="btn small success" onclick="saveToCanvasPage()">Save to Canvas Page</button>
+                    </div>
+                    <span style="font-size:11px; color:#666;" id="latex-char-count">0 chars</span>
+                </div>
+            </div>
+            <!-- Right: Canvas Preview -->
+            <div class="latex-panel">
+                <div class="latex-toolbar">
+                    <span class="label">Canvas Page Preview</span>
+                    <span style="font-size:11px; color:#666; margin-left:auto;">Rendered as Canvas would display it</span>
+                </div>
+                <div class="latex-preview-pane" id="latex-preview">
+                    <p style="color: #999;">Start typing in the editor to see a live preview...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ AI ASSISTANT TAB ═══ -->
+    <div class="tab-view" id="view-ai">
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-msg system">
+                    <div class="bubble">
+                        AI Assistant powered by Claude. I can help you create quiz questions, write assignment descriptions, draft announcements, and more. Select a course above for context.
+                    </div>
+                </div>
+            </div>
+            <div class="chat-suggestions" id="chat-suggestions">
+                <span class="chat-suggestion" onclick="aiSuggest(this)">Generate 5 multiple choice questions about...</span>
+                <span class="chat-suggestion" onclick="aiSuggest(this)">Write an assignment description for...</span>
+                <span class="chat-suggestion" onclick="aiSuggest(this)">Draft an announcement about...</span>
+                <span class="chat-suggestion" onclick="aiSuggest(this)">Create a rubric for...</span>
+            </div>
+            <div class="chat-input-row">
+                <textarea id="chat-input" placeholder="Ask Claude anything about your course..." rows="2"
+                    onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+                <button class="btn" onclick="sendChat()" id="chat-send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="status-bar">
+    <span id="status-msg">Ready</span>
+    <span id="status-right"></span>
+</div>
+
+<!-- Upload modal -->
+<div class="modal-overlay" id="upload-modal">
+    <div class="modal">
+        <h3>Upload to Canvas</h3>
+        <p id="upload-file-name"></p>
+        <label style="font-size: 13px; color: #aaa;">Destination folder:</label>
+        <select id="upload-folder-select"></select>
+        <div style="margin-top: 16px;">
+            <button class="btn" id="upload-confirm">Upload</button>
+            <button class="btn secondary" id="upload-cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Syllabus modal -->
+<div class="modal-overlay" id="syllabus-modal">
+    <div class="modal" style="max-height: 80vh; overflow-y: auto; max-width: 700px;">
+        <h3>Syllabus</h3>
+        <div id="syllabus-content" style="font-size: 14px; line-height: 1.6;"></div>
+        <div style="margin-top: 16px;">
+            <button class="btn secondary" onclick="document.getElementById('syllabus-modal').classList.remove('active')">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let currentCourseId = null;
+let currentCourseName = "";
+let canvasFolders = [];
+let pendingUpload = null;
+let currentQuizId = null;
+let currentAssignmentId = null;
+let CANVAS_API_URL = "";
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function setStatus(msg, cls = "") {
+    const el = document.getElementById("status-msg");
+    el.textContent = msg;
+    el.className = cls;
+}
+
+async function api(url, opts) {
+    const resp = await fetch(url, opts);
+    if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+    return resp.json();
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function fileIcon(name) {
+    const ext = name.split(".").pop().toLowerCase();
+    const icons = { pdf:"&#128196;", py:"&#128013;", ipynb:"&#128211;", tex:"&#128220;", xlsx:"&#128202;", docx:"&#128196;", pptx:"&#128202;", fits:"&#11088;", m4a:"&#127925;", zip:"&#128230;", png:"&#127748;", jpg:"&#127748;", csv:"&#128202;", dat:"&#128202;", txt:"&#128196;", html:"&#127760;", sh:"&#9000;" };
+    return icons[ext] || "&#128196;";
+}
+
+function formatLocalDate(isoStr) {
+    if (!isoStr) return "";
+    const d = new Date(isoStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+function isoToDatetimeLocal(isoStr) {
+    if (!isoStr) return "";
+    const d = new Date(isoStr);
+    const offset = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
+}
+
+// ══════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════
+document.querySelectorAll(".main-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".main-tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(`view-${btn.dataset.tab}`).classList.add("active");
+    });
+});
+
+
+// ══════════════════════════════════════════════════════
+// BROWSE TAB — Course Overview
+// ══════════════════════════════════════════════════════
+async function loadBrowseTab(courseId) {
+    if (!courseId) return;
+    const container = document.getElementById("canvas-tree");
+    container.innerHTML = '<div style="padding: 20px;"><span class="spinner"></span> Loading course structure...</div>';
+    try {
+        const overview = await api(`/api/canvas/course/${courseId}/overview`);
+        container.innerHTML = "";
+
+        // Global links
+        const linksDiv = document.createElement("div");
+        linksDiv.className = "global-links";
+        linksDiv.innerHTML = `
+            <a class="global-link" href="https://harvard.beta.instructure.com/courses/${courseId}" target="_blank">&#127760; Open in Canvas</a>
+            <a class="global-link" href="https://harvard.beta.instructure.com/courses/${courseId}/grades" target="_blank">&#128202; Gradebook</a>
+            <a class="global-link" onclick="showSyllabus(${courseId})">&#128214; Syllabus</a>
+            <a class="global-link" href="https://harvard.beta.instructure.com/courses/${courseId}/files" target="_blank">&#128193; All Files</a>
+            <a class="global-link" href="https://harvard.beta.instructure.com/courses/${courseId}/users" target="_blank">&#128101; People</a>
+        `;
+        container.appendChild(linksDiv);
+
+        if (overview.modules.length > 0)
+            container.appendChild(renderSection("Modules", overview.modules.map(m => renderModule(m))));
+        if (overview.assignments.length > 0)
+            container.appendChild(renderSection("Assignments", overview.assignments.map(a => {
+                const due = a.due_at ? new Date(a.due_at).toLocaleDateString() : "No due date";
+                return makeItem("assignment", "&#128203;", a.name, `${due} ${a.points_possible ? a.points_possible + " pts" : ""}`, a.html_url);
+            })));
+        if (overview.pages.length > 0)
+            container.appendChild(renderSection("Pages", overview.pages.map(p => makeItem("page", "&#128196;", p.title, "", p.html_url))));
+
+        setStatus(`Loaded: ${overview.modules.length} modules, ${overview.assignments.length} assignments, ${overview.pages.length} pages`, "success");
+    } catch (err) {
+        container.innerHTML = `<div style="padding: 20px; color: #A51C30;">Error: ${err.message}</div>`;
+        setStatus("Failed to load course", "error");
+    }
+}
+
+function renderModule(mod) {
+    const div = document.createElement("div");
+    const header = document.createElement("div");
+    header.className = "tree-item module";
+    header.innerHTML = `<span class="icon">&#9654;</span><span class="name" style="font-weight:600;">${mod.name}</span><span class="meta">${mod.items_count || 0} items</span>`;
+    const itemList = document.createElement("div");
+    itemList.style.display = "none";
+    let loaded = false;
+    header.onclick = async () => {
+        if (itemList.style.display === "none") {
+            itemList.style.display = "";
+            header.querySelector(".icon").innerHTML = "&#9660;";
+            if (!loaded) {
+                loaded = true;
+                itemList.innerHTML = '<div class="tree-item" style="color:#888; padding-left:28px;"><span class="spinner"></span>&nbsp; Loading...</div>';
+                try {
+                    const items = await api(`/api/canvas/course/${currentCourseId}/module/${mod.id}/items`);
+                    itemList.innerHTML = "";
+                    // Group items by type
+                    const groups = {};
+                    const typeOrder = ["Assignment", "Quiz", "Page", "Discussion", "File", "ExternalUrl", "SubHeader"];
+                    for (const item of items) {
+                        const t = item.type || "Other";
+                        if (!groups[t]) groups[t] = [];
+                        groups[t].push(item);
+                    }
+                    const typeLabels = { Assignment: "Assignments", Quiz: "Quizzes", Page: "Pages", Discussion: "Discussions", File: "Files", ExternalUrl: "Links", SubHeader: "Headers", Other: "Other" };
+                    for (const t of typeOrder) {
+                        if (!groups[t] || groups[t].length === 0) continue;
+                        const groupDiv = document.createElement("div");
+                        groupDiv.className = "module-type-group";
+                        const label = document.createElement("div");
+                        label.className = "module-type-label";
+                        label.textContent = `${typeLabels[t] || t} (${groups[t].length})`;
+                        groupDiv.appendChild(label);
+                        for (const item of groups[t]) {
+                            const ti = moduleItemType(item);
+                            const el = document.createElement("div");
+                            el.className = `tree-item ${ti.cls}`;
+                            el.innerHTML = `<span class="icon">${ti.icon}</span><span class="name">${item.title}</span>`;
+                            if (item.html_url) { el.onclick = (e) => { e.stopPropagation(); window.open(item.html_url, "_blank"); }; el.style.cursor = "pointer"; }
+                            groupDiv.appendChild(el);
+                        }
+                        itemList.appendChild(groupDiv);
+                    }
+                    // Handle any types not in typeOrder
+                    for (const t of Object.keys(groups)) {
+                        if (!typeOrder.includes(t)) {
+                            const groupDiv = document.createElement("div");
+                            groupDiv.className = "module-type-group";
+                            const label = document.createElement("div");
+                            label.className = "module-type-label";
+                            label.textContent = `${t} (${groups[t].length})`;
+                            groupDiv.appendChild(label);
+                            for (const item of groups[t]) {
+                                const ti = moduleItemType(item);
+                                const el = document.createElement("div");
+                                el.className = `tree-item ${ti.cls}`;
+                                el.innerHTML = `<span class="icon">${ti.icon}</span><span class="name">${item.title}</span>`;
+                                if (item.html_url) { el.onclick = (e) => { e.stopPropagation(); window.open(item.html_url, "_blank"); }; el.style.cursor = "pointer"; }
+                                groupDiv.appendChild(el);
+                            }
+                            itemList.appendChild(groupDiv);
+                        }
+                    }
+                    if (items.length === 0) itemList.innerHTML = '<div class="tree-item" style="color:#666; padding-left:28px;">No items</div>';
+                } catch (err) {
+                    itemList.innerHTML = '<div class="tree-item" style="color:#A51C30; padding-left:28px;">Error loading items</div>';
+                    loaded = false;
+                }
+            }
+        } else {
+            itemList.style.display = "none";
+            header.querySelector(".icon").innerHTML = "&#9654;";
+        }
+    };
+    div.appendChild(header);
+    div.appendChild(itemList);
+    return div;
+}
+
+function moduleItemType(item) {
+    const t = item.type || "";
+    if (t === "Assignment") return { cls: "assignment", icon: "&#128203;" };
+    if (t === "Page") return { cls: "page", icon: "&#128196;" };
+    if (t === "Quiz") return { cls: "quiz", icon: "&#10067;" };
+    if (t === "Discussion") return { cls: "discussion", icon: "&#128172;" };
+    if (t === "File") return { cls: "canvas-file", icon: "&#128196;" };
+    if (t === "ExternalUrl") return { cls: "page", icon: "&#128279;" };
+    if (t === "SubHeader") return { cls: "module", icon: "&#9472;" };
+    return { cls: "file", icon: "&#128196;" };
+}
+
+function renderSection(title, children) {
+    const section = document.createElement("div");
+    const header = document.createElement("div");
+    header.className = "section-header";
+    header.innerHTML = `<span class="toggle">&#9660;</span> ${title} <span style="color:#666;font-weight:400;">(${children.length})</span>`;
+    const body = document.createElement("div");
+    body.style.paddingLeft = "8px";
+    for (const child of children) { if (child instanceof HTMLElement) body.appendChild(child); }
+    header.onclick = () => { header.classList.toggle("collapsed"); body.style.display = body.style.display === "none" ? "" : "none"; };
+    section.appendChild(header);
+    section.appendChild(body);
+    return section;
+}
+
+function makeItem(cls, icon, name, meta, url) {
+    const div = document.createElement("div");
+    div.className = `tree-item ${cls}`;
+    div.innerHTML = `<span class="icon">${icon}</span><span class="name">${name}</span><span class="meta">${meta}</span>`;
+    if (url) { div.onclick = () => window.open(url, "_blank"); div.style.cursor = "pointer"; }
+    return div;
+}
+
+async function showSyllabus(courseId) {
+    const data = await api(`/api/canvas/course/${courseId}/syllabus`);
+    document.getElementById("syllabus-content").innerHTML = data.syllabus_body || "<p>No syllabus content.</p>";
+    document.getElementById("syllabus-modal").classList.add("active");
+}
+
+
+// ══════════════════════════════════════════════════════
+// FILES TAB — Local + Canvas file browser
+// ══════════════════════════════════════════════════════
+async function loadLocalTree() {
+    const data = await api("/api/local/tree");
+    document.getElementById("local-path").textContent = data.path;
+    document.getElementById("local-tree").innerHTML = "";
+    document.getElementById("local-tree").appendChild(renderLocalTree(data));
+}
+
+function renderLocalTree(node) {
+    const ul = document.createElement("ul");
+    ul.className = "tree";
+    if (node.type === "directory" && node.children) {
+        const dirs = node.children.filter(c => c.type === "directory");
+        const files = node.children.filter(c => c.type === "file");
+        for (const child of [...dirs, ...files]) {
+            const li = document.createElement("li");
+            const div = document.createElement("div");
+            div.className = `tree-item ${child.type}`;
+            if (child.type === "directory") {
+                div.innerHTML = `<span class="icon">&#128193;</span><span class="name">${child.name}</span><span class="meta">${child.children ? child.children.length + " items" : ""}</span>`;
+                div.onclick = (e) => { e.stopPropagation(); const sub = li.querySelector(":scope > ul"); if (sub) sub.style.display = sub.style.display === "none" ? "" : "none"; };
+                li.appendChild(div);
+                if (child.children && child.children.length > 0) li.appendChild(renderLocalTree(child));
+                else if (child.truncated) {
+                    div.onclick = async (e) => { e.stopPropagation(); const expanded = await api(`/api/local/expand?path=${encodeURIComponent(child.path)}`); const sub = renderLocalTree(expanded); li.appendChild(sub); div.onclick = (e2) => { e2.stopPropagation(); sub.style.display = sub.style.display === "none" ? "" : "none"; }; };
+                }
+            } else {
+                div.innerHTML = `<span class="icon">${fileIcon(child.name)}</span><span class="name">${child.name}</span><span class="meta">${child.size_display}</span>`;
+                div.draggable = true;
+                div.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", JSON.stringify({type: "local-file", path: child.path, name: child.name})); div.classList.add("dragging"); });
+                div.addEventListener("dragend", () => div.classList.remove("dragging"));
+                li.appendChild(div);
+            }
+            ul.appendChild(li);
+        }
+    }
+    return ul;
+}
+
+async function loadCanvasFilesTab(courseId) {
+    if (!courseId) return;
+    const container = document.getElementById("canvas-files-tree");
+    container.innerHTML = '<div style="padding: 20px;"><span class="spinner"></span> Loading folders...</div>';
+    try {
+        const folders = await api(`/api/canvas/course/${courseId}/folders`);
+        canvasFolders = folders;
+        document.getElementById("canvas-files-path").textContent = currentCourseName;
+        container.innerHTML = "";
+
+        for (const f of folders.filter(f => f.files_count > 0 || f.folders_count > 0)) {
+            const div = document.createElement("div");
+            const item = document.createElement("div");
+            item.className = "tree-item directory";
+            item.innerHTML = `<span class="icon">&#128193;</span><span class="name">${f.full_name || f.name}</span><span class="meta">${f.files_count} files</span>`;
+            item.onclick = () => loadFolderFiles(f.id, div, courseId);
+            item.addEventListener("dragover", (e) => { e.preventDefault(); item.classList.add("drag-over"); });
+            item.addEventListener("dragleave", () => item.classList.remove("drag-over"));
+            item.addEventListener("drop", (e) => { e.preventDefault(); item.classList.remove("drag-over"); handleDrop(e, f.id); });
+            div.appendChild(item);
+            container.appendChild(div);
+        }
+
+        const dropZone = document.createElement("div");
+        dropZone.className = "drop-zone";
+        dropZone.innerHTML = "&#8593; Drag files from the left panel onto a Canvas folder to upload";
+        dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("active"); });
+        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("active"));
+        dropZone.addEventListener("drop", (e) => { e.preventDefault(); dropZone.classList.remove("active"); handleDrop(e, null); });
+        container.appendChild(dropZone);
+    } catch (err) {
+        container.innerHTML = `<div style="padding: 20px; color: #A51C30;">Error: ${err.message}</div>`;
+    }
+}
+
+async function loadFolderFiles(folderId, parentDiv, courseId) {
+    const existing = parentDiv.querySelector("ul");
+    if (existing) { existing.style.display = existing.style.display === "none" ? "" : "none"; return; }
+    const files = await api(`/api/canvas/course/${courseId}/folder/${folderId}/files`);
+    const ul = document.createElement("ul");
+    ul.className = "tree";
+    for (const f of files) {
+        const li = document.createElement("li");
+        const div = document.createElement("div");
+        div.className = "tree-item canvas-file";
+        div.innerHTML = `<span class="icon">${fileIcon(f.display_name)}</span><span class="name">${f.display_name}</span><span class="meta">${f.size_display}</span>`;
+        div.style.cursor = "pointer";
+        div.onclick = () => { if (f.url) window.open(f.url, "_blank"); };
+        li.appendChild(div);
+        ul.appendChild(li);
+    }
+    if (files.length === 0) ul.innerHTML = '<li><div class="tree-item" style="color:#666;">Empty folder</div></li>';
+    parentDiv.appendChild(ul);
+}
+
+// ── Drag & Drop Upload ─────────────────────────────────
+function handleDrop(e, folderId) {
+    try { const data = JSON.parse(e.dataTransfer.getData("text/plain")); if (data.type === "local-file") showUploadModal(data.path, data.name, folderId); } catch (err) { console.error("Drop:", err); }
+}
+
+function showUploadModal(filePath, fileName, folderId) {
+    pendingUpload = { path: filePath, folderId };
+    document.getElementById("upload-file-name").textContent = `File: ${fileName}`;
+    const select = document.getElementById("upload-folder-select");
+    select.innerHTML = '<option value="">Course root</option>';
+    for (const f of canvasFolders) { const opt = document.createElement("option"); opt.value = f.id; opt.textContent = f.full_name || f.name; if (f.id === folderId) opt.selected = true; select.appendChild(opt); }
+    document.getElementById("upload-modal").classList.add("active");
+}
+
+document.getElementById("upload-confirm").onclick = async () => {
+    const folderId = document.getElementById("upload-folder-select").value || null;
+    document.getElementById("upload-modal").classList.remove("active");
+    setStatus(`Uploading ${pendingUpload.path}...`);
+    try {
+        const result = await api(`/api/canvas/course/${currentCourseId}/upload`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ local_path: pendingUpload.path, folder_id: folderId }) });
+        if (result.success) { setStatus(`Uploaded: ${result.file.display_name}`, "success"); loadCanvasFilesTab(currentCourseId); } else setStatus(`Upload failed: ${result.error}`, "error");
+    } catch (err) { setStatus(`Upload error: ${err.message}`, "error"); }
+};
+document.getElementById("upload-cancel").onclick = () => document.getElementById("upload-modal").classList.remove("active");
+
+
+// ══════════════════════════════════════════════════════
+// ASSIGNMENTS TAB
+// ══════════════════════════════════════════════════════
+async function loadAssignmentList() {
+    if (!currentCourseId) return;
+    const container = document.getElementById("assignment-list");
+    container.innerHTML = '<div style="padding: 12px;"><span class="spinner"></span></div>';
+    try {
+        const assignments = await api(`/api/canvas/course/${currentCourseId}/assignments`);
+        container.innerHTML = "";
+        if (assignments.length === 0) { container.innerHTML = '<div style="padding: 12px; color: #666; font-size: 13px;">No assignments yet</div>'; return; }
+        for (const a of assignments) {
+            const div = document.createElement("div");
+            div.className = "list-item";
+            div.dataset.id = a.id;
+            const due = a.due_at ? new Date(a.due_at).toLocaleDateString("en-US", {month:"short", day:"numeric"}) : "No due date";
+            div.innerHTML = `
+                <span class="icon" style="color: #a78bfa;">&#128203;</span>
+                <span class="item-title">${a.name}</span>
+                <span class="badge ${a.published ? 'published' : 'draft'}">${a.published ? 'Pub' : 'Draft'}</span>
+            `;
+            div.onclick = () => loadAssignmentEditor(a.id);
+            container.appendChild(div);
+        }
+    } catch (err) { container.innerHTML = `<div style="padding: 12px; color: #A51C30;">${err.message}</div>`; }
+}
+
+function showNewAssignmentForm() {
+    if (!currentCourseId) { setStatus("Select a course first", "error"); return; }
+    currentAssignmentId = null;
+    // Deselect sidebar items
+    document.querySelectorAll("#assignment-list .list-item").forEach(el => el.classList.remove("selected"));
+
+    const editor = document.getElementById("assignment-editor");
+    editor.innerHTML = `
+        <div class="assignment-card">
+            <h3>Create New Assignment</h3>
+            <div class="form-group">
+                <label>Assignment Name</label>
+                <input type="text" class="form-input" id="new-asgn-name" placeholder="e.g., Problem Set 3">
+            </div>
+            <div class="form-group">
+                <label>Description (HTML supported)</label>
+                <textarea class="form-input" id="new-asgn-desc" placeholder="Instructions for students..." style="min-height:120px;"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="datetime-local" class="form-input" id="new-asgn-due">
+                </div>
+                <div class="form-group">
+                    <label>Points Possible</label>
+                    <input type="number" class="form-input" id="new-asgn-points" placeholder="100" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Submission Type</label>
+                    <select class="form-input" id="new-asgn-subtype">
+                        <option value="online_text_entry">Text Entry</option>
+                        <option value="online_upload">File Upload</option>
+                        <option value="online_url">URL</option>
+                        <option value="on_paper">On Paper</option>
+                        <option value="none">No Submission</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Grading Type</label>
+                    <select class="form-input" id="new-asgn-grading">
+                        <option value="points">Points</option>
+                        <option value="percent">Percentage</option>
+                        <option value="letter_grade">Letter Grade</option>
+                        <option value="pass_fail">Pass/Fail</option>
+                        <option value="not_graded">Not Graded</option>
+                    </select>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="createAssignment()">Create Assignment</button>
+                <button class="btn secondary" onclick="document.getElementById('assignment-editor').innerHTML=''">Cancel</button>
+            </div>
+        </div>
+    `;
+}
+
+async function createAssignment() {
+    const name = document.getElementById("new-asgn-name").value;
+    if (!name) { setStatus("Assignment name is required", "error"); return; }
+    setStatus("Creating assignment...");
+    try {
+        const dueVal = document.getElementById("new-asgn-due").value;
+        const result = await api(`/api/canvas/course/${currentCourseId}/assignments`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name,
+                description: document.getElementById("new-asgn-desc").value,
+                due_at: dueVal ? new Date(dueVal).toISOString() : null,
+                points_possible: parseFloat(document.getElementById("new-asgn-points").value) || null,
+                submission_types: [document.getElementById("new-asgn-subtype").value],
+                grading_type: document.getElementById("new-asgn-grading").value,
+            }),
+        });
+        setStatus(`Created: ${result.assignment.name}`, "success");
+        loadAssignmentList();
+        loadAssignmentEditor(result.assignment.id);
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+async function loadAssignmentEditor(assignmentId) {
+    currentAssignmentId = assignmentId;
+    const editor = document.getElementById("assignment-editor");
+    editor.innerHTML = '<div style="padding: 20px;"><span class="spinner"></span> Loading assignment...</div>';
+
+    // Highlight in sidebar
+    document.querySelectorAll("#assignment-list .list-item").forEach(el => {
+        el.classList.toggle("selected", el.dataset.id == assignmentId);
+    });
+
+    try {
+        // Fetch full assignment details from the list endpoint
+        const assignments = await api(`/api/canvas/course/${currentCourseId}/assignments`);
+        const a = assignments.find(x => x.id === assignmentId);
+        if (!a) throw new Error("Assignment not found");
+
+        editor.innerHTML = `
+            <div class="assignment-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h3 style="margin:0;">Edit Assignment</h3>
+                    <div class="btn-group" style="margin:0;">
+                        <button class="btn small success" id="asgn-save-btn" onclick="saveAssignment(${a.id})" style="display:none;">Save Changes</button>
+                        <button class="btn small ${a.published ? 'secondary' : 'success'}" onclick="toggleAssignmentPublish(${a.id}, ${!a.published})">${a.published ? 'Unpublish' : 'Publish'}</button>
+                        <a class="btn small secondary" href="${a.html_url}" target="_blank" style="text-decoration:none; display:inline-block; text-align:center;">Open in Canvas</a>
+                        <button class="btn small danger" onclick="deleteAssignment(${a.id})">Delete</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Assignment Name</label>
+                    <input type="text" class="form-input" id="ea-name" value="${escapeHtml(a.name)}" oninput="markAssignmentDirty()">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea class="form-input" id="ea-desc" style="min-height:150px;" oninput="markAssignmentDirty()">${a.description || ''}</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Due Date</label>
+                        <input type="datetime-local" class="form-input" id="ea-due" value="${isoToDatetimeLocal(a.due_at)}" onchange="markAssignmentDirty()">
+                    </div>
+                    <div class="form-group">
+                        <label>Available From</label>
+                        <input type="datetime-local" class="form-input" id="ea-unlock" value="${isoToDatetimeLocal(a.unlock_at)}" onchange="markAssignmentDirty()">
+                    </div>
+                    <div class="form-group">
+                        <label>Until</label>
+                        <input type="datetime-local" class="form-input" id="ea-lock" value="${isoToDatetimeLocal(a.lock_at)}" onchange="markAssignmentDirty()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Points Possible</label>
+                        <input type="number" class="form-input" id="ea-points" value="${a.points_possible || ''}" min="0" oninput="markAssignmentDirty()">
+                    </div>
+                    <div class="form-group">
+                        <label>Grading Type</label>
+                        <select class="form-input" id="ea-grading" onchange="markAssignmentDirty()">
+                            <option value="points" ${a.grading_type==='points'?'selected':''}>Points</option>
+                            <option value="percent" ${a.grading_type==='percent'?'selected':''}>Percentage</option>
+                            <option value="letter_grade" ${a.grading_type==='letter_grade'?'selected':''}>Letter Grade</option>
+                            <option value="pass_fail" ${a.grading_type==='pass_fail'?'selected':''}>Pass/Fail</option>
+                            <option value="not_graded" ${a.grading_type==='not_graded'?'selected':''}>Not Graded</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top:8px; font-size:12px; color:#666;">
+                    Submission types: ${(a.submission_types || []).join(", ")} &middot;
+                    Status: <span style="color:${a.published ? '#4ecca3' : '#888'};">${a.published ? 'Published' : 'Draft'}</span>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        editor.innerHTML = `<div style="padding: 20px; color: #A51C30;">Error: ${err.message}</div>`;
+    }
+}
+
+function markAssignmentDirty() {
+    const btn = document.getElementById("asgn-save-btn");
+    if (btn) btn.style.display = "inline-block";
+}
+
+async function saveAssignment(assignmentId) {
+    const btn = document.getElementById("asgn-save-btn");
+    btn.textContent = "Saving...";
+    btn.disabled = true;
+
+    const dueVal = document.getElementById("ea-due").value;
+    const unlockVal = document.getElementById("ea-unlock").value;
+    const lockVal = document.getElementById("ea-lock").value;
+
+    const data = {
+        name: document.getElementById("ea-name").value,
+        description: document.getElementById("ea-desc").value,
+        due_at: dueVal ? new Date(dueVal).toISOString() : null,
+        unlock_at: unlockVal ? new Date(unlockVal).toISOString() : null,
+        lock_at: lockVal ? new Date(lockVal).toISOString() : null,
+        points_possible: parseFloat(document.getElementById("ea-points").value) || 0,
+        grading_type: document.getElementById("ea-grading").value,
+    };
+
+    try {
+        await api(`/api/canvas/course/${currentCourseId}/assignments/${assignmentId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        setStatus("Assignment saved", "success");
+        btn.style.display = "none";
+        loadAssignmentList();
+    } catch (err) {
+        setStatus(`Save failed: ${err.message}`, "error");
+    }
+    btn.textContent = "Save Changes";
+    btn.disabled = false;
+}
+
+async function toggleAssignmentPublish(assignmentId, publish) {
+    try {
+        await api(`/api/canvas/course/${currentCourseId}/assignments/${assignmentId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ published: publish }),
+        });
+        setStatus(publish ? "Assignment published" : "Assignment unpublished", "success");
+        loadAssignmentList();
+        loadAssignmentEditor(assignmentId);
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+async function deleteAssignment(assignmentId) {
+    if (!confirm("Delete this assignment? This cannot be undone.")) return;
+    try {
+        await api(`/api/canvas/course/${currentCourseId}/assignments/${assignmentId}`, { method: "DELETE" });
+        setStatus("Assignment deleted", "success");
+        document.getElementById("assignment-editor").innerHTML = '<div style="text-align:center; padding:60px; color:#666;">Assignment deleted. Select another from the list.</div>';
+        loadAssignmentList();
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+
+// ══════════════════════════════════════════════════════
+// QUIZZES TAB
+// ══════════════════════════════════════════════════════
+async function loadQuizList() {
+    if (!currentCourseId) return;
+    const container = document.getElementById("quiz-list");
+    container.innerHTML = '<div style="padding: 12px;"><span class="spinner"></span></div>';
+    try {
+        const quizzes = await api(`/api/canvas/course/${currentCourseId}/quizzes`);
+        container.innerHTML = "";
+        if (quizzes.length === 0) { container.innerHTML = '<div style="padding: 12px; color: #666; font-size: 13px;">No quizzes yet</div>'; return; }
+        for (const q of quizzes) {
+            const div = document.createElement("div");
+            div.className = "list-item";
+            div.dataset.id = q.id;
+            div.innerHTML = `
+                <span class="icon" style="color: #f59e0b;">&#10067;</span>
+                <span class="item-title">${q.title}</span>
+                <span class="badge ${q.published ? 'published' : 'draft'}">${q.published ? 'Pub' : 'Draft'}</span>
+            `;
+            div.onclick = () => loadQuizEditor(q.id);
+            container.appendChild(div);
+        }
+    } catch (err) { container.innerHTML = `<div style="padding: 12px; color: #A51C30;">${err.message}</div>`; }
+}
+
+function showNewQuizForm() {
+    if (!currentCourseId) { setStatus("Select a course first", "error"); return; }
+    currentQuizId = null;
+    document.querySelectorAll("#quiz-list .list-item").forEach(el => el.classList.remove("selected"));
+    const editor = document.getElementById("quiz-editor");
+    editor.innerHTML = `
+        <div class="assignment-card">
+            <h3>Create New Quiz</h3>
+            <div class="form-group">
+                <label>Quiz Title</label>
+                <input type="text" class="form-input" id="new-quiz-title" placeholder="e.g., Module 3 Review Quiz">
+            </div>
+            <div class="form-group">
+                <label>Description (HTML supported)</label>
+                <textarea class="form-input" id="new-quiz-desc" placeholder="Instructions for students..."></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Quiz Type</label>
+                    <select class="form-input" id="new-quiz-type">
+                        <option value="assignment">Graded Quiz</option>
+                        <option value="practice_quiz">Practice Quiz</option>
+                        <option value="graded_survey">Graded Survey</option>
+                        <option value="survey">Ungraded Survey</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Time Limit (minutes)</label>
+                    <input type="number" class="form-input" id="new-quiz-time" placeholder="No limit">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="createQuiz()">Create Quiz</button>
+                <button class="btn secondary" onclick="document.getElementById('quiz-editor').innerHTML=''">Cancel</button>
+            </div>
+        </div>
+    `;
+}
+
+async function createQuiz() {
+    const title = document.getElementById("new-quiz-title").value;
+    if (!title) { setStatus("Quiz title is required", "error"); return; }
+    setStatus("Creating quiz...");
+    try {
+        const result = await api(`/api/canvas/course/${currentCourseId}/quizzes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title,
+                description: document.getElementById("new-quiz-desc").value,
+                quiz_type: document.getElementById("new-quiz-type").value,
+                time_limit: document.getElementById("new-quiz-time").value || null,
+            }),
+        });
+        setStatus(`Created quiz: ${result.quiz.title}`, "success");
+        loadQuizList();
+        loadQuizEditor(result.quiz.id);
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+async function loadQuizEditor(quizId) {
+    currentQuizId = quizId;
+    const editor = document.getElementById("quiz-editor");
+    editor.innerHTML = '<div style="padding: 20px;"><span class="spinner"></span> Loading questions...</div>';
+
+    document.querySelectorAll("#quiz-list .list-item").forEach(el => {
+        el.classList.toggle("selected", el.dataset.id == quizId);
+    });
+
+    try {
+        const questions = await api(`/api/canvas/course/${currentCourseId}/quizzes/${quizId}/questions`);
+        editor.innerHTML = "";
+
+        const header = document.createElement("div");
+        header.style.cssText = "display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;";
+        header.innerHTML = `
+            <h3 style="color: #A51C30;">Questions (${questions.length})</h3>
+            <div class="btn-group" style="margin:0;">
+                <button class="btn small" onclick="showAddQuestion()">+ Add Question</button>
+                <button class="btn small success" onclick="publishQuiz(true)">Publish</button>
+                <a class="btn small secondary" href="https://harvard.beta.instructure.com/courses/${currentCourseId}/quizzes/${quizId}" target="_blank" style="text-decoration:none; display:inline-block; text-align:center;">Open in Canvas</a>
+            </div>
+        `;
+        editor.appendChild(header);
+
+        const addForm = document.createElement("div");
+        addForm.id = "add-question-form";
+        addForm.style.display = "none";
+        editor.appendChild(addForm);
+
+        for (let i = 0; i < questions.length; i++) {
+            editor.appendChild(renderQuestionCard(questions[i], i + 1));
+        }
+
+        if (questions.length === 0) {
+            editor.innerHTML += '<div style="text-align:center; padding: 30px; color: #666;"><p>No questions yet. Click "+ Add Question" to get started.</p></div>';
+        }
+    } catch (err) { editor.innerHTML = `<div style="padding: 20px; color: #A51C30;">Error: ${err.message}</div>`; }
+}
+
+function renderQuestionCard(q, num) {
+    const card = document.createElement("div");
+    card.className = "question-card";
+    card.id = `qcard-${q.id}`;
+    const typeLabels = {
+        multiple_choice_question: "Multiple Choice",
+        true_false_question: "True/False",
+        short_answer_question: "Short Answer",
+        essay_question: "Essay",
+        fill_in_multiple_blanks_question: "Fill in Blanks",
+        matching_question: "Matching",
+        numerical_question: "Numerical",
+        multiple_answers_question: "Multiple Answers",
+    };
+
+    const hasAnswers = q.answers && q.answers.length > 0;
+    const isMultipleChoice = ["multiple_choice_question", "true_false_question", "multiple_answers_question"].includes(q.question_type);
+
+    let answersHtml = "";
+    if (hasAnswers) {
+        answersHtml = `<div style="margin-top: 8px;">
+            <label style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: block;">
+                ${isMultipleChoice ? 'Answers (select correct)' : 'Answers'}
+            </label>`;
+        for (let i = 0; i < q.answers.length; i++) {
+            const a = q.answers[i];
+            const isCorrect = a.weight > 0;
+            if (isMultipleChoice) {
+                answersHtml += `<div class="answer-row">
+                    <input type="radio" name="eq-correct-${q.id}" value="${i}" ${isCorrect ? 'checked' : ''} onchange="markQuestionDirty(${q.id})">
+                    <input type="text" value="${(a.text || a.html || '').replace(/"/g, '&quot;')}" class="eq-answer-${q.id}" data-answer-id="${a.id || ''}" style="flex:1; background:#2a1520; color:#e0e0e0; border:1px solid #333; padding:6px 10px; border-radius:4px; font-size:13px;" oninput="markQuestionDirty(${q.id})">
+                </div>`;
+            } else {
+                answersHtml += `<div class="answer-row">
+                    <span class="correct-mark">&#10003;</span>
+                    <input type="text" value="${(a.text || a.html || '').replace(/"/g, '&quot;')}" class="eq-answer-${q.id}" data-answer-id="${a.id || ''}" style="flex:1; background:#2a1520; color:#e0e0e0; border:1px solid #333; padding:6px 10px; border-radius:4px; font-size:13px;" oninput="markQuestionDirty(${q.id})">
+                </div>`;
+            }
+        }
+        answersHtml += '</div>';
+    }
+
+    card.innerHTML = `
+        <div class="q-header">
+            <span class="q-number">Q${num}</span>
+            <span class="q-type">${typeLabels[q.question_type] || q.question_type}</span>
+            <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+                <label style="font-size:11px; color:#888;">Pts:</label>
+                <input type="number" value="${q.points_possible || 0}" min="0" step="0.5" id="eq-pts-${q.id}" style="width:60px; background:#2a1520; color:#e0e0e0; border:1px solid #333; padding:4px 8px; border-radius:4px; font-size:13px;" oninput="markQuestionDirty(${q.id})">
+                <button class="btn small success" id="eq-save-${q.id}" onclick="saveQuestion(${q.id})" style="display:none;">Save</button>
+                <button class="btn small secondary" onclick="deleteQuestion(${q.id})">Delete</button>
+            </div>
+        </div>
+        <div class="form-group" style="margin-top:8px;">
+            <div id="eq-preview-${q.id}" class="q-preview" style="background:#2a1520; border:1px solid #333; border-radius:4px; padding:10px 12px; font-size:14px; line-height:1.6; cursor:pointer; min-height:40px; color:#e0e0e0;" onclick="switchToEdit(${q.id})" title="Click to edit HTML source">
+                ${q.question_text || '<span style=&quot;color:#666;&quot;>Click to add question text...</span>'}
+            </div>
+            <textarea class="form-input" id="eq-text-${q.id}" style="min-height:80px; display:none; font-family:monospace; font-size:12px;" oninput="markQuestionDirty(${q.id})" onblur="switchToPreview(${q.id})">${q.question_text || ''}</textarea>
+            <div style="font-size:10px; color:#666; margin-top:2px;">Click the rendered text above to edit the HTML source.</div>
+        </div>
+        ${answersHtml}
+    `;
+    return card;
+}
+
+function switchToEdit(questionId) {
+    const preview = document.getElementById(`eq-preview-${questionId}`);
+    const textarea = document.getElementById(`eq-text-${questionId}`);
+    if (preview && textarea) {
+        preview.style.display = "none";
+        textarea.style.display = "";
+        textarea.focus();
+    }
+}
+
+function switchToPreview(questionId) {
+    const preview = document.getElementById(`eq-preview-${questionId}`);
+    const textarea = document.getElementById(`eq-text-${questionId}`);
+    if (preview && textarea) {
+        preview.innerHTML = textarea.value || '<span style="color:#666;">Click to add question text...</span>';
+        preview.style.display = "";
+        textarea.style.display = "none";
+    }
+}
+
+function markQuestionDirty(questionId) {
+    const saveBtn = document.getElementById(`eq-save-${questionId}`);
+    if (saveBtn) {
+        saveBtn.style.display = "inline-block";
+        const card = document.getElementById(`qcard-${questionId}`);
+        if (card) card.style.borderColor = "#A51C30";
+    }
+}
+
+async function saveQuestion(questionId) {
+    const text = document.getElementById(`eq-text-${questionId}`).value;
+    const points = parseFloat(document.getElementById(`eq-pts-${questionId}`).value) || 0;
+    const data = { question_text: text, points_possible: points };
+
+    const answerInputs = document.querySelectorAll(`.eq-answer-${questionId}`);
+    if (answerInputs.length > 0) {
+        const correctRadio = document.querySelector(`input[name="eq-correct-${questionId}"]:checked`);
+        const correctIdx = correctRadio ? parseInt(correctRadio.value) : -1;
+        data.answers = [];
+        answerInputs.forEach((input, i) => {
+            data.answers.push({
+                id: input.dataset.answerId || undefined,
+                text: input.value.trim(),
+                weight: (correctIdx >= 0) ? (i === correctIdx ? 100 : 0) : 100,
+            });
+        });
+    }
+
+    setStatus("Saving question...");
+    const saveBtn = document.getElementById(`eq-save-${questionId}`);
+    saveBtn.textContent = "...";
+    saveBtn.disabled = true;
+
+    try {
+        await api(`/api/canvas/course/${currentCourseId}/quizzes/${currentQuizId}/questions/${questionId}`, {
+            method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
+        });
+        setStatus("Question saved", "success");
+        saveBtn.style.display = "none";
+        const card = document.getElementById(`qcard-${questionId}`);
+        if (card) card.style.borderColor = "";
+    } catch (err) { setStatus(`Save failed: ${err.message}`, "error"); }
+    saveBtn.textContent = "Save";
+    saveBtn.disabled = false;
+}
+
+function showAddQuestion() {
+    const form = document.getElementById("add-question-form");
+    form.style.display = "block";
+    form.innerHTML = `
+        <div class="question-card" style="border-color: #A51C30;">
+            <h4 style="color: #A51C30; margin-bottom: 12px;">New Question</h4>
+            <div class="form-row">
+                <div class="form-group" style="flex:2;">
+                    <label>Question Type</label>
+                    <select class="form-input" id="nq-type" onchange="updateAnswerForm()">
+                        <option value="multiple_choice_question">Multiple Choice</option>
+                        <option value="true_false_question">True / False</option>
+                        <option value="short_answer_question">Short Answer</option>
+                        <option value="essay_question">Essay</option>
+                        <option value="numerical_question">Numerical</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>Points</label>
+                    <input type="number" class="form-input" id="nq-points" value="1" min="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Question Text</label>
+                <textarea class="form-input" id="nq-text" placeholder="Enter your question..."></textarea>
+            </div>
+            <div id="nq-answers-container">
+                <label style="font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">Answers (select the correct one)</label>
+                <div id="nq-answers">
+                    <div class="answer-row"><input type="radio" name="nq-correct" value="0" checked><input type="text" placeholder="Answer A" class="nq-answer"></div>
+                    <div class="answer-row"><input type="radio" name="nq-correct" value="1"><input type="text" placeholder="Answer B" class="nq-answer"></div>
+                    <div class="answer-row"><input type="radio" name="nq-correct" value="2"><input type="text" placeholder="Answer C" class="nq-answer"></div>
+                    <div class="answer-row"><input type="radio" name="nq-correct" value="3"><input type="text" placeholder="Answer D" class="nq-answer"></div>
+                </div>
+                <button class="add-answer-btn" onclick="addAnswerRow()">+ Add another answer</button>
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="submitQuestion()">Add Question</button>
+                <button class="btn secondary" onclick="document.getElementById('add-question-form').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    `;
+}
+
+function updateAnswerForm() {
+    const type = document.getElementById("nq-type").value;
+    const container = document.getElementById("nq-answers-container");
+    if (type === "essay_question") {
+        container.style.display = "none";
+    } else if (type === "true_false_question") {
+        container.style.display = "block";
+        document.getElementById("nq-answers").innerHTML = `
+            <div class="answer-row"><input type="radio" name="nq-correct" value="0" checked><input type="text" value="True" class="nq-answer" readonly></div>
+            <div class="answer-row"><input type="radio" name="nq-correct" value="1"><input type="text" value="False" class="nq-answer" readonly></div>
+        `;
+    } else {
+        container.style.display = "block";
+        if (type === "short_answer_question" || type === "numerical_question") {
+            document.getElementById("nq-answers").innerHTML = `
+                <div class="answer-row"><input type="text" placeholder="Correct answer" class="nq-answer"></div>
+            `;
+        }
+    }
+}
+
+function addAnswerRow() {
+    const container = document.getElementById("nq-answers");
+    const idx = container.children.length;
+    const row = document.createElement("div");
+    row.className = "answer-row";
+    row.innerHTML = `<input type="radio" name="nq-correct" value="${idx}"><input type="text" placeholder="Answer ${String.fromCharCode(65 + idx)}" class="nq-answer">`;
+    container.appendChild(row);
+}
+
+async function submitQuestion() {
+    const type = document.getElementById("nq-type").value;
+    const text = document.getElementById("nq-text").value;
+    const points = parseFloat(document.getElementById("nq-points").value) || 1;
+    if (!text) { setStatus("Question text is required", "error"); return; }
+
+    const data = { question_type: type, question_text: text, points_possible: points, question_name: "Question" };
+
+    if (type !== "essay_question") {
+        const answerInputs = document.querySelectorAll(".nq-answer");
+        const correctRadio = document.querySelector('input[name="nq-correct"]:checked');
+        const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
+        data.answers = [];
+        answerInputs.forEach((input, i) => {
+            if (input.value.trim()) {
+                data.answers.push({
+                    text: input.value.trim(),
+                    weight: (type === "short_answer_question" || type === "numerical_question") ? 100 : (i === correctIdx ? 100 : 0),
+                });
+            }
+        });
+    }
+
+    setStatus("Adding question...");
+    try {
+        await api(`/api/canvas/course/${currentCourseId}/quizzes/${currentQuizId}/questions`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
+        });
+        setStatus("Question added", "success");
+        loadQuizEditor(currentQuizId);
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+async function deleteQuestion(questionId) {
+    if (!confirm("Delete this question?")) return;
+    try {
+        await api(`/api/canvas/course/${currentCourseId}/quizzes/${currentQuizId}/questions/${questionId}`, { method: "DELETE" });
+        setStatus("Question deleted", "success");
+        loadQuizEditor(currentQuizId);
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+async function publishQuiz(publish) {
+    try {
+        await api(`/api/canvas/course/${currentCourseId}/quizzes/${currentQuizId}/publish`, {
+            method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ published: publish }),
+        });
+        setStatus(publish ? "Quiz published!" : "Quiz unpublished", "success");
+        loadQuizList();
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+
+// ══════════════════════════════════════════════════════
+// CALENDAR TAB
+// ══════════════════════════════════════════════════════
+let calendarEvents = [];
+let calendarDate = new Date();  // tracks which month is displayed
+
+async function loadCalendar(courseId) {
+    if (!courseId) return;
+    const container = document.getElementById("calendar-container");
+    container.innerHTML = '<div style="padding: 20px;"><span class="spinner"></span> Loading calendar data...</div>';
+    try {
+        calendarEvents = await api(`/api/canvas/course/${courseId}/calendar_data`);
+        calendarDate = new Date();
+        renderCalendar();
+    } catch (err) {
+        container.innerHTML = `<div style="padding: 20px; color: #A51C30;">Error: ${err.message}</div>`;
+    }
+}
+
+function renderCalendar() {
+    const container = document.getElementById("calendar-container");
+    container.innerHTML = "";
+
+    // Nav bar
+    const nav = document.createElement("div");
+    nav.className = "cal-nav";
+    const prevBtn = document.createElement("button");
+    prevBtn.textContent = "\u25C0 Prev";
+    prevBtn.onclick = () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderCalendar(); };
+    const nextBtn = document.createElement("button");
+    nextBtn.textContent = "Next \u25B6";
+    nextBtn.onclick = () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderCalendar(); };
+    const todayBtn = document.createElement("button");
+    todayBtn.textContent = "Today";
+    todayBtn.onclick = () => { calendarDate = new Date(); renderCalendar(); };
+    const title = document.createElement("h3");
+    title.textContent = calendarDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    nav.appendChild(prevBtn);
+    nav.appendChild(title);
+    nav.appendChild(nextBtn);
+    nav.appendChild(todayBtn);
+    container.appendChild(nav);
+
+    // Legend
+    const legend = document.createElement("div");
+    legend.className = "cal-legend";
+    legend.innerHTML = `
+        <span><span class="swatch" style="background:rgba(167,139,250,0.4); border-left: 3px solid #a78bfa;"></span> Assignment (bar = availability window)</span>
+        <span><span class="swatch" style="background:rgba(245,158,11,0.4); border-left: 3px solid #f59e0b;"></span> Quiz due date</span>
+        <span><span class="swatch" style="background:rgba(233,69,96,0.3);"></span> Due date</span>
+    `;
+    container.appendChild(legend);
+
+    // Build calendar grid
+    const grid = document.createElement("div");
+    grid.className = "cal-grid";
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    for (const d of days) {
+        const h = document.createElement("div");
+        h.className = "cal-header";
+        h.textContent = d;
+        grid.appendChild(h);
+    }
+
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    // Fill leading blanks from previous month
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    for (let i = firstDay - 1; i >= 0; i--) {
+        const cell = makeCalCell(year, month - 1, prevMonthDays - i, true);
+        grid.appendChild(cell);
+    }
+    // This month's days
+    for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = (today.getFullYear() === year && today.getMonth() === month && today.getDate() === d);
+        const cell = makeCalCell(year, month, d, false, isToday);
+        grid.appendChild(cell);
+    }
+    // Trailing blanks
+    const totalCells = firstDay + daysInMonth;
+    const trailing = (7 - (totalCells % 7)) % 7;
+    for (let d = 1; d <= trailing; d++) {
+        const cell = makeCalCell(year, month + 1, d, true);
+        grid.appendChild(cell);
+    }
+
+    container.appendChild(grid);
+}
+
+function makeCalCell(year, month, day, isOtherMonth, isToday = false) {
+    const cell = document.createElement("div");
+    cell.className = "cal-cell";
+    if (isOtherMonth) cell.classList.add("other-month");
+    if (isToday) cell.classList.add("today");
+
+    const dayLabel = document.createElement("div");
+    dayLabel.className = "cal-day";
+    dayLabel.textContent = day;
+    cell.appendChild(dayLabel);
+
+    const cellDate = new Date(year, month, day);
+    const cellStr = cellDate.toDateString();
+
+    for (const ev of calendarEvents) {
+        const dueDate = ev.due_at ? new Date(ev.due_at) : null;
+        const unlockDate = ev.unlock_at ? new Date(ev.unlock_at) : null;
+
+        if (ev.type === "quiz" && dueDate && dueDate.toDateString() === cellStr) {
+            const badge = document.createElement("div");
+            badge.className = "cal-event quiz";
+            badge.textContent = ev.name;
+            badge.title = `Quiz due: ${ev.name}${ev.points ? ' (' + ev.points + ' pts)' : ''}`;
+            if (ev.html_url) badge.onclick = () => window.open(ev.html_url, "_blank");
+            cell.appendChild(badge);
+        }
+
+        if (ev.type === "assignment") {
+            // Show the assignment on its due date
+            if (dueDate && dueDate.toDateString() === cellStr) {
+                const badge = document.createElement("div");
+                badge.className = "cal-event assignment";
+                badge.textContent = ev.name;
+                badge.title = `Due: ${ev.name}${ev.points ? ' (' + ev.points + ' pts)' : ''}`;
+                badge.style.background = "rgba(233,69,96,0.2)";
+                badge.style.color = "#A51C30";
+                badge.style.borderLeftColor = "#A51C30";
+                if (ev.html_url) badge.onclick = () => window.open(ev.html_url, "_blank");
+                cell.appendChild(badge);
+            }
+            // Show availability window (start of bar)
+            if (unlockDate && dueDate) {
+                const unlockStr = unlockDate.toDateString();
+                if (unlockStr === cellStr && unlockStr !== (dueDate ? dueDate.toDateString() : "")) {
+                    const badge = document.createElement("div");
+                    badge.className = "cal-event assignment-bar";
+                    badge.textContent = "\u25B6 " + ev.name;
+                    badge.title = `Available from: ${ev.name}`;
+                    cell.appendChild(badge);
+                }
+            }
+        }
+    }
+    return cell;
+}
+
+
+// ══════════════════════════════════════════════════════
+// STUDENT PROGRESS TAB
+// ══════════════════════════════════════════════════════
+async function loadStudentProgress(courseId) {
+    if (!courseId) return;
+    const container = document.getElementById("progress-container");
+    container.innerHTML = '<div style="padding: 20px;"><span class="spinner"></span> Loading student progress data...</div>';
+    try {
+        const data = await api(`/api/canvas/course/${courseId}/analytics/progress`);
+        renderStudentProgress(data);
+    } catch (err) {
+        container.innerHTML = `<div style="padding: 20px; color: #A51C30;">Error: ${err.message}</div>`;
+    }
+}
+
+function renderStudentProgress(data) {
+    const container = document.getElementById("progress-container");
+    container.innerHTML = "";
+
+    const students = data.students || [];
+    const assignments = data.assignments || [];
+    const submissions = data.submissions || {};
+
+    // ── Summary statistics ──
+    const withScores = students.filter(s => s.current_score !== null && s.current_score !== undefined);
+    const scores = withScores.map(s => s.current_score);
+    const avgScore = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    const medianScore = scores.length > 0 ? sortedMedian(scores) : 0;
+
+    // Count missing assignments
+    let totalMissing = 0;
+    let studentsWithMissing = 0;
+    for (const s of students) {
+        const subs = submissions[String(s.id)] || [];
+        const missing = subs.filter(sub => sub.missing).length;
+        if (missing > 0) { totalMissing += missing; studentsWithMissing++; }
+    }
+
+    const summaryDiv = document.createElement("div");
+    summaryDiv.className = "summary-stats";
+    summaryDiv.innerHTML = `
+        <div class="summary-stat-card">
+            <div class="big-num">${students.length}</div>
+            <div class="stat-label">Students</div>
+        </div>
+        <div class="summary-stat-card">
+            <div class="big-num">${assignments.length}</div>
+            <div class="stat-label">Graded Assignments</div>
+        </div>
+        <div class="summary-stat-card">
+            <div class="big-num">${avgScore.toFixed(1)}%</div>
+            <div class="stat-label">Mean Score</div>
+        </div>
+        <div class="summary-stat-card">
+            <div class="big-num">${medianScore.toFixed(1)}%</div>
+            <div class="stat-label">Median Score</div>
+        </div>
+        <div class="summary-stat-card">
+            <div class="big-num" style="color: ${totalMissing > 0 ? '#A51C30' : '#4ecca3'};">${totalMissing}</div>
+            <div class="stat-label">Missing Submissions</div>
+        </div>
+    `;
+    container.appendChild(summaryDiv);
+
+    const grid = document.createElement("div");
+    grid.className = "progress-grid";
+
+    // ── 1. Ranked cumulative scores ──
+    const scoreCard = document.createElement("div");
+    scoreCard.className = "progress-card";
+    scoreCard.innerHTML = "<h4>Ranked Student Scores (Current %)</h4>";
+    const ranked = [...withScores].sort((a, b) => (b.current_score || 0) - (a.current_score || 0));
+    if (ranked.length === 0) {
+        scoreCard.innerHTML += '<div style="color:#666; font-size:13px;">No scored students yet.</div>';
+    } else {
+        for (let i = 0; i < ranked.length; i++) {
+            const s = ranked[i];
+            const pct = s.current_score || 0;
+            const color = pct >= 90 ? "#4ecca3" : pct >= 70 ? "#f0c040" : pct >= 50 ? "#f59e0b" : "#A51C30";
+            const row = document.createElement("div");
+            row.className = "progress-bar-row";
+            row.innerHTML = `
+                <span class="progress-bar-label" title="${escapeHtml(s.name)}">${i + 1}. ${escapeHtml(s.name)}</span>
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" style="width:${pct}%; background:${color};"></div>
+                </div>
+                <span class="progress-bar-value">${pct.toFixed(1)}%</span>
+            `;
+            scoreCard.appendChild(row);
+        }
+    }
+    grid.appendChild(scoreCard);
+
+    // ── 2. Grade Distribution ──
+    const distCard = document.createElement("div");
+    distCard.className = "progress-card";
+    distCard.innerHTML = "<h4>Grade Distribution</h4>";
+    const buckets = { "A (90-100)": 0, "B (80-89)": 0, "C (70-79)": 0, "D (60-69)": 0, "F (<60)": 0 };
+    const bucketColors = { "A (90-100)": "#4ecca3", "B (80-89)": "#60a5fa", "C (70-79)": "#f0c040", "D (60-69)": "#f59e0b", "F (<60)": "#A51C30" };
+    for (const s of withScores) {
+        const sc = s.current_score || 0;
+        if (sc >= 90) buckets["A (90-100)"]++;
+        else if (sc >= 80) buckets["B (80-89)"]++;
+        else if (sc >= 70) buckets["C (70-79)"]++;
+        else if (sc >= 60) buckets["D (60-69)"]++;
+        else buckets["F (<60)"]++;
+    }
+    const maxBucket = Math.max(...Object.values(buckets), 1);
+    for (const [label, count] of Object.entries(buckets)) {
+        const pct = (count / maxBucket) * 100;
+        const row = document.createElement("div");
+        row.className = "progress-bar-row";
+        row.innerHTML = `
+            <span class="progress-bar-label">${label}</span>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" style="width:${pct}%; background:${bucketColors[label]};"></div>
+            </div>
+            <span class="progress-bar-value">${count} student${count !== 1 ? 's' : ''}</span>
+        `;
+        distCard.appendChild(row);
+    }
+    grid.appendChild(distCard);
+
+    // ── 3. Students with Missing Assignments ──
+    const missingCard = document.createElement("div");
+    missingCard.className = "progress-card";
+    missingCard.innerHTML = "<h4>Students with Missing Assignments</h4>";
+    const missingList = [];
+    for (const s of students) {
+        const subs = submissions[String(s.id)] || [];
+        const missingSubs = subs.filter(sub => sub.missing);
+        if (missingSubs.length > 0) {
+            missingList.push({ name: s.name, count: missingSubs.length, assignments: missingSubs.map(ms => {
+                const asgn = assignments.find(a => a.id === ms.assignment_id);
+                return asgn ? asgn.name : `Assignment ${ms.assignment_id}`;
+            })});
+        }
+    }
+    missingList.sort((a, b) => b.count - a.count);
+    if (missingList.length === 0) {
+        missingCard.innerHTML += '<div style="color:#4ecca3; font-size:13px; padding:8px;">No missing assignments!</div>';
+    } else {
+        const listDiv = document.createElement("div");
+        listDiv.className = "missing-list";
+        for (const m of missingList) {
+            const row = document.createElement("div");
+            row.className = "missing-row";
+            row.title = "Missing: " + m.assignments.join(", ");
+            row.innerHTML = `<span class="student">${escapeHtml(m.name)}</span><span class="count">${m.count} missing</span>`;
+            listDiv.appendChild(row);
+        }
+        missingCard.appendChild(listDiv);
+    }
+    grid.appendChild(missingCard);
+
+    // ── 4. Late Submissions ──
+    const lateCard = document.createElement("div");
+    lateCard.className = "progress-card";
+    lateCard.innerHTML = "<h4>Late Submissions</h4>";
+    const lateList = [];
+    for (const s of students) {
+        const subs = submissions[String(s.id)] || [];
+        const lateSubs = subs.filter(sub => sub.late);
+        if (lateSubs.length > 0) {
+            lateList.push({ name: s.name, count: lateSubs.length });
+        }
+    }
+    lateList.sort((a, b) => b.count - a.count);
+    if (lateList.length === 0) {
+        lateCard.innerHTML += '<div style="color:#4ecca3; font-size:13px; padding:8px;">No late submissions!</div>';
+    } else {
+        const listDiv = document.createElement("div");
+        listDiv.className = "missing-list";
+        for (const m of lateList) {
+            const row = document.createElement("div");
+            row.className = "missing-row";
+            row.innerHTML = `<span class="student">${escapeHtml(m.name)}</span><span class="count" style="color:#f59e0b;">${m.count} late</span>`;
+            listDiv.appendChild(row);
+        }
+        lateCard.appendChild(listDiv);
+    }
+    grid.appendChild(lateCard);
+
+    container.appendChild(grid);
+
+    // ── 5. Per-Assignment Performance ──
+    if (assignments.length > 0) {
+        const asgnCard = document.createElement("div");
+        asgnCard.className = "progress-card";
+        asgnCard.style.marginBottom = "16px";
+        asgnCard.innerHTML = "<h4>Per-Assignment Average Scores</h4>";
+        for (const a of assignments) {
+            const asgnScores = [];
+            for (const s of students) {
+                const subs = submissions[String(s.id)] || [];
+                const sub = subs.find(sb => sb.assignment_id === a.id);
+                if (sub && sub.score !== null && sub.score !== undefined) {
+                    asgnScores.push(sub.score / (a.points_possible || 1) * 100);
+                }
+            }
+            const avg = asgnScores.length > 0 ? asgnScores.reduce((x, y) => x + y, 0) / asgnScores.length : 0;
+            const color = avg >= 90 ? "#4ecca3" : avg >= 70 ? "#f0c040" : avg >= 50 ? "#f59e0b" : "#A51C30";
+            const row = document.createElement("div");
+            row.className = "progress-bar-row";
+            row.innerHTML = `
+                <span class="progress-bar-label" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" style="width:${avg}%; background:${color};"></div>
+                </div>
+                <span class="progress-bar-value">${avg.toFixed(1)}% (${asgnScores.length}/${students.length})</span>
+            `;
+            asgnCard.appendChild(row);
+        }
+        container.appendChild(asgnCard);
+    }
+}
+
+function sortedMedian(arr) {
+    const sorted = [...arr].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+
+// ══════════════════════════════════════════════════════
+// PAGE EDITOR TAB
+// ══════════════════════════════════════════════════════
+let currentPageUrl = null;
+
+async function loadPageList() {
+    if (!currentCourseId) return;
+    const container = document.getElementById("page-list");
+    container.innerHTML = '<div style="padding: 12px;"><span class="spinner"></span></div>';
+    try {
+        const pages = await api(`/api/canvas/course/${currentCourseId}/pages`);
+        container.innerHTML = "";
+        if (pages.length === 0) { container.innerHTML = '<div style="padding: 12px; color: #666; font-size: 13px;">No pages yet</div>'; return; }
+        for (const p of pages) {
+            const div = document.createElement("div");
+            div.className = "list-item";
+            div.dataset.url = p.url;
+            div.innerHTML = `
+                <span class="icon" style="color: #60a5fa;">&#128196;</span>
+                <span class="item-title">${p.title}</span>
+            `;
+            div.onclick = () => loadPageEditor(p.url);
+            container.appendChild(div);
+        }
+    } catch (err) { container.innerHTML = `<div style="padding: 12px; color: #A51C30;">${err.message}</div>`; }
+}
+
+function showNewPageForm() {
+    if (!currentCourseId) { setStatus("Select a course first", "error"); return; }
+    currentPageUrl = null;
+    document.querySelectorAll("#page-list .list-item").forEach(el => el.classList.remove("selected"));
+    const editor = document.getElementById("page-editor");
+    editor.innerHTML = `
+        <div class="assignment-card">
+            <h3>Create New Page</h3>
+            <div class="form-group">
+                <label>Page Title</label>
+                <input type="text" class="form-input" id="new-page-title" placeholder="e.g., Lecture 5 Notes">
+            </div>
+            <div class="form-group">
+                <label>Content (HTML)</label>
+                <textarea class="form-input" id="new-page-body" style="min-height:200px; font-family:monospace; font-size:12px;" placeholder="<p>Write your page content here...</p>"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Preview</label>
+                <div id="new-page-preview" style="background:#fff; color:#333; padding:16px; border-radius:4px; min-height:80px; border:1px solid #333; font-family:'Lato',Arial,sans-serif; font-size:15px; line-height:1.7;"></div>
+            </div>
+            <script>document.getElementById('new-page-body').oninput = function() { document.getElementById('new-page-preview').innerHTML = this.value; };</script>
+            <div class="btn-group">
+                <button class="btn" onclick="createPage()">Create Page</button>
+                <button class="btn secondary" onclick="document.getElementById('page-editor').innerHTML=''">Cancel</button>
+            </div>
+        </div>
+    `;
+    // Wire up preview
+    document.getElementById('new-page-body').oninput = function() {
+        document.getElementById('new-page-preview').innerHTML = this.value;
+    };
+}
+
+async function createPage() {
+    const title = document.getElementById("new-page-title").value;
+    if (!title) { setStatus("Page title is required", "error"); return; }
+    setStatus("Creating page...");
+    try {
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        await api(`/api/canvas/course/${currentCourseId}/pages/${slug}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: title,
+                body: document.getElementById("new-page-body").value,
+                published: false,
+            }),
+        });
+        setStatus(`Created page: ${title}`, "success");
+        loadPageList();
+        loadPageEditor(slug);
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+async function loadPageEditor(pageUrl) {
+    currentPageUrl = pageUrl;
+    const editor = document.getElementById("page-editor");
+    editor.innerHTML = '<div style="padding: 20px;"><span class="spinner"></span> Loading page...</div>';
+
+    document.querySelectorAll("#page-list .list-item").forEach(el => {
+        el.classList.toggle("selected", el.dataset.url === pageUrl);
+    });
+
+    try {
+        const page = await api(`/api/canvas/course/${currentCourseId}/pages/${encodeURIComponent(pageUrl)}`);
+        editor.innerHTML = `
+            <div class="assignment-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h3 style="margin:0;">Edit Page</h3>
+                    <div class="btn-group" style="margin:0;">
+                        <button class="btn small success" id="page-save-btn" onclick="savePage('${pageUrl}')" style="display:none;">Save Changes</button>
+                        <button class="btn small ${page.published ? 'secondary' : 'success'}" onclick="togglePagePublish('${pageUrl}', ${!page.published})">${page.published ? 'Unpublish' : 'Publish'}</button>
+                        <a class="btn small secondary" href="${CANVAS_API_URL.replace('/api/v1','')}/courses/${currentCourseId}/pages/${pageUrl}" target="_blank" style="text-decoration:none; display:inline-block; text-align:center;">Open in Canvas</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Page Title</label>
+                    <input type="text" class="form-input" id="ep-title" value="${escapeHtml(page.title)}" oninput="markPageDirty()">
+                </div>
+                <div class="form-group">
+                    <label>Content (HTML Source)</label>
+                    <textarea class="form-input" id="ep-body" style="min-height:250px; font-family:monospace; font-size:12px;" oninput="markPageDirty(); updatePagePreview();">${page.body || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Preview</label>
+                    <div id="ep-preview" style="background:#fff; color:#333; padding:16px; border-radius:4px; min-height:100px; border:1px solid #333; font-family:'Lato',Arial,sans-serif; font-size:15px; line-height:1.7;">
+                        ${page.body || '<span style="color:#999;">Empty page</span>'}
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        editor.innerHTML = `<div style="padding: 20px; color: #A51C30;">Error: ${err.message}</div>`;
+    }
+}
+
+function updatePagePreview() {
+    const body = document.getElementById("ep-body");
+    const preview = document.getElementById("ep-preview");
+    if (body && preview) {
+        preview.innerHTML = body.value || '<span style="color:#999;">Empty page</span>';
+    }
+}
+
+function markPageDirty() {
+    const btn = document.getElementById("page-save-btn");
+    if (btn) btn.style.display = "inline-block";
+}
+
+async function savePage(pageUrl) {
+    const btn = document.getElementById("page-save-btn");
+    btn.textContent = "Saving...";
+    btn.disabled = true;
+    try {
+        await api(`/api/canvas/course/${currentCourseId}/pages/${encodeURIComponent(pageUrl)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: document.getElementById("ep-title").value,
+                body: document.getElementById("ep-body").value,
+            }),
+        });
+        setStatus("Page saved", "success");
+        btn.style.display = "none";
+        loadPageList();
+    } catch (err) { setStatus(`Save failed: ${err.message}`, "error"); }
+    btn.textContent = "Save Changes";
+    btn.disabled = false;
+}
+
+async function togglePagePublish(pageUrl, publish) {
+    try {
+        await api(`/api/canvas/course/${currentCourseId}/pages/${encodeURIComponent(pageUrl)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ published: publish }),
+        });
+        setStatus(publish ? "Page published" : "Page unpublished", "success");
+        loadPageList();
+        loadPageEditor(pageUrl);
+    } catch (err) { setStatus(`Error: ${err.message}`, "error"); }
+}
+
+
+// ══════════════════════════════════════════════════════
+// LATEX-TO-CANVAS EDITOR
+// ══════════════════════════════════════════════════════
+
+// Canvas equation URL format: double-URL-encode the LaTeX
+function latexToCanvasUrl(latex) {
+    // Canvas uses: /equation_images/<double-url-encoded-latex>?scale=1
+    // The base URL comes from the Canvas instance
+    const baseUrl = (typeof CANVAS_API_URL !== 'undefined' ? CANVAS_API_URL : '').replace('/api/v1', '');
+    const encoded = encodeURIComponent(encodeURIComponent(latex.trim()));
+    return `${baseUrl || 'https://canvas.instructure.com'}/equation_images/${encoded}?scale=1`;
+}
+
+function latexToCanvasImg(latex) {
+    const url = latexToCanvasUrl(latex);
+    const escaped = latex.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<img class="equation_image" title="${escaped}" src="${url}" alt="LaTeX: ${escaped}" data-equation-content="${escaped}" />`;
+}
+
+function previewEquation() {
+    const input = document.getElementById("latex-eq-input").value.trim();
+    const preview = document.getElementById("latex-eq-preview");
+    if (!input) {
+        preview.innerHTML = '<span style="color:#999; font-size:11px;">preview</span>';
+        return;
+    }
+    const url = latexToCanvasUrl(input);
+    preview.innerHTML = `<img src="${url}" style="max-height:28px;" onerror="this.parentElement.innerHTML='<span style=\\'color:#A51C30; font-size:10px;\\'>error</span>'">`;
+}
+
+function insertEquationAtCursor() {
+    const input = document.getElementById("latex-eq-input").value.trim();
+    if (!input) return;
+    const editor = document.getElementById("latex-editor");
+    const imgTag = latexToCanvasImg(input);
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const text = editor.value;
+    editor.value = text.substring(0, start) + imgTag + text.substring(end);
+    editor.selectionStart = editor.selectionEnd = start + imgTag.length;
+    editor.focus();
+    document.getElementById("latex-eq-input").value = "";
+    document.getElementById("latex-eq-preview").innerHTML = '<span style="color:#999; font-size:11px;">preview</span>';
+    updateLatexPreview();
+}
+
+function quickLatex(latex) {
+    const input = document.getElementById("latex-eq-input");
+    input.value = latex;
+    input.focus();
+    previewEquation();
+}
+
+function convertAllLatex() {
+    const editor = document.getElementById("latex-editor");
+    let text = editor.value;
+    // Convert $$...$$ (display math) first, then $...$ (inline math)
+    text = text.replace(/\$\$([^$]+)\$\$/g, (match, latex) => latexToCanvasImg(latex.trim()));
+    text = text.replace(/\$([^$]+)\$/g, (match, latex) => latexToCanvasImg(latex.trim()));
+    editor.value = text;
+    updateLatexPreview();
+}
+
+function updateLatexPreview() {
+    const editor = document.getElementById("latex-editor");
+    const preview = document.getElementById("latex-preview");
+    const html = editor.value;
+    if (!html.trim()) {
+        preview.innerHTML = '<p style="color: #999;">Start typing in the editor to see a live preview...</p>';
+    } else {
+        preview.innerHTML = html;
+    }
+    document.getElementById("latex-char-count").textContent = `${html.length} chars`;
+}
+
+function copyEditorHtml() {
+    const editor = document.getElementById("latex-editor");
+    navigator.clipboard.writeText(editor.value).then(() => {
+        setStatus("HTML copied to clipboard", "success");
+    }).catch(() => {
+        // Fallback
+        editor.select();
+        document.execCommand("copy");
+        setStatus("HTML copied to clipboard", "success");
+    });
+}
+
+let canvasPagesList = [];
+async function loadCanvasPage() {
+    if (!currentCourseId) { setStatus("Select a course first", "error"); return; }
+    try {
+        if (canvasPagesList.length === 0) {
+            canvasPagesList = await api(`/api/canvas/course/${currentCourseId}/pages`);
+        }
+        const pageUrl = prompt("Enter the Canvas page URL slug (e.g., 'lecture-1-notes').\n\nAvailable pages:\n" +
+            canvasPagesList.slice(0, 20).map(p => `  ${p.url} — ${p.title}`).join("\n"));
+        if (!pageUrl) return;
+        setStatus("Loading Canvas page...");
+        const page = await api(`/api/canvas/course/${currentCourseId}/pages/${encodeURIComponent(pageUrl)}`);
+        document.getElementById("latex-editor").value = page.body || "";
+        updateLatexPreview();
+        setStatus(`Loaded page: ${page.title}`, "success");
+    } catch (err) {
+        setStatus(`Error loading page: ${err.message}`, "error");
+    }
+}
+
+async function saveToCanvasPage() {
+    if (!currentCourseId) { setStatus("Select a course first", "error"); return; }
+    const html = document.getElementById("latex-editor").value;
+    if (!html.trim()) { setStatus("Nothing to save", "error"); return; }
+    try {
+        if (canvasPagesList.length === 0) {
+            canvasPagesList = await api(`/api/canvas/course/${currentCourseId}/pages`);
+        }
+        const pageUrl = prompt("Enter the Canvas page URL slug to save to:\n\nAvailable pages:\n" +
+            canvasPagesList.slice(0, 20).map(p => `  ${p.url} — ${p.title}`).join("\n") +
+            "\n\nOr enter a new slug to create a new page:");
+        if (!pageUrl) return;
+        setStatus("Saving to Canvas...");
+        await api(`/api/canvas/course/${currentCourseId}/pages/${encodeURIComponent(pageUrl)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ body: html }),
+        });
+        setStatus(`Saved to page: ${pageUrl}`, "success");
+    } catch (err) {
+        setStatus(`Error saving page: ${err.message}`, "error");
+    }
+}
+
+async function aiLatexHelp() {
+    const input = document.getElementById("latex-eq-input");
+    const current = input.value.trim();
+    const request = prompt("Describe the equation or expression you need in LaTeX:\n" +
+        (current ? `\nCurrent LaTeX: ${current}` : "") +
+        "\n\nExamples:\n  'Schwarzschild radius'\n  'Stefan-Boltzmann law'\n  'integral of x squared from 0 to infinity'");
+    if (!request) return;
+    setStatus("AI generating LaTeX...");
+    try {
+        const resp = await fetch("/api/ai/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: `Give me ONLY the LaTeX equation (no explanation, no $$, no $ delimiters, just the raw LaTeX) for: ${request}`,
+                course_context: "",
+            }),
+        });
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value);
+            for (const line of chunk.split("\n")) {
+                if (line.startsWith("data: ") && line.substring(6) !== "[DONE]") {
+                    try {
+                        const parsed = JSON.parse(line.substring(6));
+                        if (parsed.text) fullText += parsed.text;
+                    } catch (e) {}
+                }
+            }
+        }
+        // Clean up: remove any surrounding $, $$, \[, \], backticks, newlines
+        let latex = fullText.trim()
+            .replace(/^\$+/, '').replace(/\$+$/, '')
+            .replace(/^\\\[/, '').replace(/\\\]$/, '')
+            .replace(/^`+/, '').replace(/`+$/, '')
+            .trim();
+        input.value = latex;
+        previewEquation();
+        setStatus("LaTeX generated — check the preview", "success");
+    } catch (err) {
+        setStatus(`AI error: ${err.message}`, "error");
+    }
+}
+
+
+// ══════════════════════════════════════════════════════
+// AI ASSISTANT
+// ══════════════════════════════════════════════════════
+function aiSuggest(el) {
+    document.getElementById("chat-input").value = el.textContent;
+    document.getElementById("chat-input").focus();
+}
+
+async function sendChat() {
+    const input = document.getElementById("chat-input");
+    const prompt = input.value.trim();
+    if (!prompt) return;
+    input.value = "";
+
+    const messages = document.getElementById("chat-messages");
+    const userMsg = document.createElement("div");
+    userMsg.className = "chat-msg user";
+    userMsg.innerHTML = `<div class="bubble">${escapeHtml(prompt)}</div>`;
+    messages.appendChild(userMsg);
+
+    const assistantMsg = document.createElement("div");
+    assistantMsg.className = "chat-msg assistant";
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerHTML = '<span class="spinner"></span>';
+    assistantMsg.appendChild(bubble);
+    messages.appendChild(assistantMsg);
+    messages.scrollTop = messages.scrollHeight;
+
+    const sendBtn = document.getElementById("chat-send-btn");
+    sendBtn.disabled = true;
+    sendBtn.textContent = "...";
+
+    try {
+        const courseContext = currentCourseName ? `Course: ${currentCourseName} (ID: ${currentCourseId})` : "";
+        const resp = await fetch("/api/ai/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt, course_context: courseContext }),
+        });
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+        bubble.textContent = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value);
+            const lines = chunk.split("\n");
+            for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                    const data = line.substring(6);
+                    if (data === "[DONE]") break;
+                    try {
+                        const parsed = JSON.parse(data);
+                        if (parsed.text) { fullText += parsed.text; bubble.textContent = fullText; }
+                        if (parsed.error) { bubble.innerHTML = `<span style="color:#A51C30;">Error: ${escapeHtml(parsed.error)}</span>`; }
+                    } catch (e) {}
+                }
+            }
+            messages.scrollTop = messages.scrollHeight;
+        }
+    } catch (err) {
+        bubble.innerHTML = `<span style="color:#A51C30;">Connection error: ${escapeHtml(err.message)}</span>`;
+    }
+
+    sendBtn.disabled = false;
+    sendBtn.textContent = "Send";
+    messages.scrollTop = messages.scrollHeight;
+}
+
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+async function init() {
+    try { const cfg = await api("/api/config"); CANVAS_API_URL = cfg.canvas_url || ""; } catch(e) {}
+    const courses = await api("/api/canvas/courses");
+    const select = document.getElementById("course-select");
+    select.innerHTML = '<option value="">-- Select a course --</option>';
+    for (const c of courses) {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = `${c.code}: ${c.name}${c.term ? " (" + c.term + ")" : ""}`;
+        select.appendChild(opt);
+    }
+    select.onchange = () => {
+        const id = select.value;
+        if (id) {
+            currentCourseId = id;
+            currentCourseName = select.options[select.selectedIndex].text;
+            // Load all tabs for this course
+            loadBrowseTab(id);
+            loadCanvasFilesTab(id);
+            loadAssignmentList();
+            loadQuizList();
+            loadPageList();
+            loadCalendar(id);
+            loadStudentProgress(id);
+            canvasPagesList = [];
+        }
+    };
+    loadLocalTree();
+    setStatus("Ready");
+}
+
+init();
+</script>
+</body>
+</html>
