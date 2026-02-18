@@ -103,7 +103,7 @@
 {\LARGE User Guide}
 
 \vspace{0.3cm}
-{\large Version 1.0}
+{\large Version 2.0}
 
 \vspace{0.2cm}
 \textcolor{gray}{\rule{0.4\textwidth}{0.5pt}}
@@ -399,7 +399,7 @@ Use the \textbf{Prev}/\textbf{Next} buttons to move between months, or click \te
 \end{center}
 
 \begin{tipbox}
-Click any event badge to open it directly in Canvas. Hover over a badge to see the full name and point value.
+Click any event badge to jump directly to that item's editor within the application (not Canvas). For example, clicking a quiz due date on the calendar switches to the Quizzes tab and opens that quiz. Hover over a badge to see the full name and point value.
 \end{tipbox}
 
 
@@ -434,9 +434,31 @@ A horizontal bar chart shows every student's current percentage score, ranked fr
 
 This makes it easy to spot students who may need additional support.
 
-\subsection{Grade Distribution}
+\subsection{Canvas Access Statistics}
 
-A histogram-style bar chart groups students into letter-grade buckets: A (90--100), B (80--89), C (70--79), D (60--69), F ($<60$). This gives you an at-a-glance view of the overall class performance distribution.
+A dual bar chart showing each student's \textbf{page views} (blue) and \textbf{participations} (purple), sorted by total activity. This gives you an at-a-glance view of who is actively engaging with the course material and who may need outreach.
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    \fill[gray!10, rounded corners=3pt] (0,0) rectangle (10,3.5);
+    \node[text=navy, font=\small\bfseries, anchor=west] at (0.3,3.1) {Canvas Access Statistics};
+    % Column headers
+    \node[text=gray, font=\tiny] at (5.5,2.6) {Page Views};
+    \node[text=gray, font=\tiny] at (8.5,2.6) {Participations};
+    % Student rows
+    \foreach \y/\name/\pv/\pp in {2.1/Alice Chen/85/42, 1.6/Bob Martinez/72/35, 1.1/Carol Kim/45/18, 0.6/David Lee/12/5} {
+        \node[text=black, font=\tiny, anchor=west] at (0.5,\y) {\name};
+        \fill[blue!40, rounded corners=1pt] (3.5,\y-0.12) rectangle (3.5+\pv/30,\y+0.12);
+        \node[text=black, font=\tiny, anchor=west] at (3.5+\pv/30+0.1,\y) {\pv};
+        \fill[purple!40, rounded corners=1pt] (7.0,\y-0.12) rectangle (7.0+\pp/15,\y+0.12);
+        \node[text=black, font=\tiny, anchor=west] at (7.0+\pp/15+0.1,\y) {\pp};
+    }
+\end{tikzpicture}
+\end{center}
+
+\begin{tipbox}
+Low page views combined with low scores may indicate a student who isn't engaging with the material. High page views with low scores may indicate a student who is struggling despite effort.
+\end{tipbox}
 
 \subsection{Missing Assignments}
 
@@ -503,8 +525,27 @@ The upload uses Canvas's three-step upload process (notify, upload, confirm) and
 
 Click any folder in the right panel to expand it and see its contents. Click a file to open/download it in a new tab.
 
+\subsection{Local File Navigation}
+
+The local file panel includes navigation controls at the top:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{$\uparrow$ Up} --- go to the parent directory.
+    \item \textbf{Home} --- go to your home directory (\texttt{\textasciitilde}).
+    \item \textbf{Desktop} --- go to \texttt{\textasciitilde/Desktop}.
+    \item \textbf{Click path display} --- type any path to navigate directly.
+    \item \textbf{Double-click a folder} --- enter that folder as the new root.
+\end{itemize}
+
+\subsection{File Type Filtering}
+
+Both panels include a filter bar with buttons: \textbf{All}, \textbf{PDF}, \textbf{Python}, \textbf{Images}, \textbf{Docs}, \textbf{Data}, \textbf{Code}. Click a filter to show only matching file types. For example, clicking \textbf{PDF} hides everything except \texttt{.pdf} files.
+
+\subsection{Resizable Panels}
+
+The vertical divider between the two panels (and between sidebars and editors in other tabs) is draggable. Grab and drag it to resize the panels to your preference.
+
 \begin{tipbox}
-The local file panel starts at the directory specified by the \texttt{LOCAL\_ROOT} environment variable. Set this to your course's working directory for quick access.
+The local file panel starts at the directory specified by the \texttt{LOCAL\_ROOT} environment variable. Set this to your course's working directory for quick access. You can navigate away at any time using the navigation buttons.
 \end{tipbox}
 
 
@@ -569,6 +610,77 @@ The Assignments tab provides a full-screen editor with a sidebar list and a main
     \item Click \textbf{Create Assignment}. It will be created as a draft (unpublished).
     \item Publish it when ready using the \textbf{Publish} button in the editor.
 \end{enumerate}
+
+\subsection{Split HTML Editor}
+
+The assignment description uses a side-by-side editor:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Left:} Raw HTML source (editable textarea).
+    \item \textbf{Right:} Live rendered preview that updates as you type.
+\end{itemize}
+
+This means you can write HTML tags like \texttt{<p>}, \texttt{<ol>}, \texttt{<strong>} in the source panel and immediately see how they'll appear to students.
+
+\begin{lstlisting}[language=HTML,title={Example: Assignment Description HTML}]
+<p>This problem set covers <strong>orbital mechanics</strong>.</p>
+<ol>
+  <li>Derive Kepler's third law from Newton's law.</li>
+  <li>Calculate the escape velocity from Earth.</li>
+  <li>Plot the trajectory of a satellite using Python.</li>
+</ol>
+<p><em>Submit as a single PDF.</em></p>
+\end{lstlisting}
+
+\subsection{AI-Generated Assignments}
+
+Click the \textbf{AI Generate} button in the sidebar header to open the AI assignment generator:
+
+\begin{enumerate}[leftmargin=*]
+    \item Enter a \textbf{topic or instructions} describing what the assignment should cover.
+    \item Optionally add \textbf{source materials} (Canvas pages, local files, or free text) to give the AI context.
+    \item Select the \textbf{assignment type} (Problem Set, Essay, Lab Report, Project).
+    \item Set the \textbf{points possible}.
+    \item Click \textbf{Generate Assignment}.
+    \item Review and edit the generated title, description (in the split editor), and points.
+    \item Click \textbf{Create Draft Assignment in Canvas} to create it as an unpublished draft.
+\end{enumerate}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.75]
+    \fill[gray!10, rounded corners=3pt] (0,0) rectangle (12,5);
+    \node[text=crimson, font=\small\bfseries, anchor=west] at (0.3,4.5) {AI Assignment Generator};
+    % Topic
+    \node[text=gray, font=\tiny, anchor=west] at (0.5,3.9) {\textsc{topic / instructions}};
+    \fill[gray!20, rounded corners=2pt] (0.5,3.0) rectangle (11.5,3.7);
+    \node[text=black, font=\scriptsize, anchor=west] at (0.7,3.35) {Create a problem set on stellar evolution, HR diagram, main sequence lifetimes};
+    % Sources
+    \node[text=gray, font=\tiny, anchor=west] at (0.5,2.6) {\textsc{source materials}};
+    \fill[gray!20, rounded corners=8pt] (0.5,2.1) rectangle (3.5,2.45);
+    \node[text=black, font=\tiny] at (2.0,2.28) {Lecture 5 Notes $\times$};
+    \fill[gray!20, rounded corners=8pt] (3.7,2.1) rectangle (6.0,2.45);
+    \node[text=black, font=\tiny] at (4.85,2.28) {chapter4.pdf $\times$};
+    % Type and points
+    \fill[gray!20, rounded corners=2pt] (0.5,1.2) rectangle (4.0,1.7);
+    \node[text=black, font=\tiny, anchor=west] at (0.7,1.45) {Problem Set};
+    \fill[gray!20, rounded corners=2pt] (4.5,1.2) rectangle (6.5,1.7);
+    \node[text=black, font=\tiny, anchor=west] at (4.7,1.45) {100 pts};
+    % Button
+    \fill[crimson, rounded corners=2pt] (0.5,0.3) rectangle (3.5,0.8);
+    \node[text=white, font=\small\bfseries] at (2.0,0.55) {Generate};
+\end{tikzpicture}
+\end{center}
+
+\subsection{AI Review of Assignments}
+
+When editing an existing assignment, click the \textbf{AI Review} button in the header. The AI will analyze the assignment description and identify:
+\begin{itemize}[leftmargin=*]
+    \item Ambiguous or unclear instructions
+    \item Missing information students would need
+    \item Unclear grading criteria
+    \item Wording that could be improved
+\end{itemize}
+
+The review streams in below the assignment editor. Use the feedback to refine your assignment before publishing.
 
 \subsection{Publishing and Deleting}
 
@@ -637,20 +749,117 @@ Each question card shows:
 Published quizzes \emph{can} be edited via the API as long as no student has started a submission attempt. If students have already taken the quiz, Canvas may restrict certain changes.
 \end{notebox}
 
-\subsection{Adding Questions}
+\subsection{Adding Questions (Hierarchical)}
 
-Click \textbf{+ Add Question} to expand a form where you can:
+Click \textbf{+ Add Question} to open a two-step form:
+
+\textbf{Step 1:} Choose the question type from a visual grid:
+
+\begin{center}
+\begin{tikzpicture}[scale=0.75,
+    qtype/.style={draw=gray!50, fill=gray!10, rounded corners=3pt, minimum width=3.5cm, minimum height=1.0cm, text=navy, font=\scriptsize, align=center}
+]
+    \node[qtype] at (0,1.5) {\textbf{Multiple Choice}\\4 options, 1 correct};
+    \node[qtype] at (4.2,1.5) {\textbf{True / False}\\Two options};
+    \node[qtype] at (8.4,1.5) {\textbf{Short Answer}\\Student types text};
+    \node[qtype] at (0,0) {\textbf{Essay}\\Free-form writing};
+    \node[qtype] at (4.2,0) {\textbf{Numerical}\\Student enters a number};
+    \node[qtype] at (8.4,0) {\textbf{Multiple Answers}\\Select all that apply};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Step 2:} Fill in the type-specific form. The form adapts to the question type:
 \begin{itemize}[leftmargin=*]
-    \item Choose the question type (Multiple Choice, True/False, Short Answer, Essay, Numerical)
-    \item Enter the question text
-    \item Set point value
-    \item Add answer options and select the correct one
-    \item Click \textbf{Add Question} to save it to the quiz
+    \item \textbf{Multiple Choice:} Radio buttons for correct answer selection, 4+ editable answer fields.
+    \item \textbf{True/False:} Pre-filled True and False options; select which is correct.
+    \item \textbf{Short Answer / Numerical:} Text fields for acceptable answer(s) (all marked correct).
+    \item \textbf{Essay:} No answer fields --- just the question text and points.
+    \item \textbf{Multiple Answers:} Checkboxes (select \emph{all} correct answers).
 \end{itemize}
+
+The question text field includes a \textbf{side-by-side HTML preview}, so you can use \texttt{<p>}, \texttt{<strong>}, equation image tags, etc. A ``Change Type'' link lets you go back to Step~1 without losing your text.
 
 \subsection{Creating a New Quiz}
 
-Click \textbf{+ New} in the sidebar to open the quiz creation form. Set the title, description, quiz type (graded, practice, survey), and optional time limit. New quizzes are created as drafts — publish when ready.
+Click \textbf{+ New} in the sidebar to open the quiz creation form. Set the title, description, quiz type (graded, practice, survey), and optional time limit. New quizzes are created as drafts --- publish when ready.
+
+\subsection{AI-Generated Quizzes}
+
+Click the \textbf{AI Generate} button in the sidebar header to open the quiz generator:
+
+\begin{enumerate}[leftmargin=*]
+    \item Enter a \textbf{topic or instructions} (e.g., ``Stellar evolution, HR diagram, main sequence lifetimes'').
+    \item Optionally add \textbf{source materials} by clicking \textbf{+ Add Sources}:
+        \begin{itemize}
+            \item \textbf{Canvas Pages} --- select from a checklist of your course pages.
+            \item \textbf{Assignments} --- select from a checklist of assignment descriptions.
+            \item \textbf{Local Files} --- browse your filesystem and check files to include.
+            \item \textbf{Free Text} --- paste chapter notes, topic lists, or custom context.
+        \end{itemize}
+    \item Choose a \textbf{prompt template} (default: ``Generate Quiz Questions'').
+    \item Set the \textbf{number of questions}, \textbf{question type} (MC, T/F, Short Answer, Essay, or Mix), and \textbf{points per question}.
+    \item Click \textbf{Generate Questions}.
+    \item Review the generated questions in editable cards (with side-by-side HTML preview).
+    \item Edit question text, change correct answers, adjust points, or delete individual questions.
+    \item Click \textbf{Create Draft Quiz in Canvas} to create an unpublished quiz with all questions.
+\end{enumerate}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.75]
+    \fill[gray!10, rounded corners=3pt] (0,0) rectangle (12,6.5);
+    \node[text=crimson, font=\small\bfseries, anchor=west] at (0.3,6.0) {AI Quiz Generator};
+    % Topic
+    \node[text=gray, font=\tiny, anchor=west] at (0.5,5.4) {\textsc{topic}};
+    \fill[gray!20, rounded corners=2pt] (0.5,4.8) rectangle (11.5,5.3);
+    \node[text=black, font=\scriptsize, anchor=west] at (0.7,5.05) {Stellar evolution: HR diagram, main sequence lifetimes, post-MS evolution};
+    % Sources
+    \node[text=gray, font=\tiny, anchor=west] at (0.5,4.4) {\textsc{source materials}};
+    \fill[teal!15, rounded corners=8pt] (0.5,3.9) rectangle (3.2,4.25);
+    \node[text=black, font=\tiny] at (1.85,4.08) {Lecture 7 Notes};
+    \fill[teal!15, rounded corners=8pt] (3.4,3.9) rectangle (5.8,4.25);
+    \node[text=black, font=\tiny] at (4.6,4.08) {Ch5\_stellar.pdf};
+    \fill[gray!20, rounded corners=2pt] (6.0,3.9) rectangle (8.2,4.25);
+    \node[text=gray, font=\tiny] at (7.1,4.08) {+ Add Sources};
+    % Options row
+    \fill[gray!20, rounded corners=2pt] (0.5,2.8) rectangle (3.5,3.3);
+    \node[text=black, font=\tiny, anchor=west] at (0.7,3.05) {Generate Quiz Questions};
+    \fill[gray!20, rounded corners=2pt] (3.8,2.8) rectangle (5.3,3.3);
+    \node[text=black, font=\tiny, anchor=west] at (4.0,3.05) {5 questions};
+    \fill[gray!20, rounded corners=2pt] (5.6,2.8) rectangle (8.0,3.3);
+    \node[text=black, font=\tiny, anchor=west] at (5.8,3.05) {Multiple Choice};
+    \fill[gray!20, rounded corners=2pt] (8.3,2.8) rectangle (9.8,3.3);
+    \node[text=black, font=\tiny, anchor=west] at (8.5,3.05) {1 pt each};
+    % Button
+    \fill[crimson, rounded corners=2pt] (0.5,2.0) rectangle (3.5,2.5);
+    \node[text=white, font=\small\bfseries] at (2.0,2.25) {Generate};
+    % Generated Q preview
+    \draw[gray!40, dashed] (0.5,0.2) -- (11.5,0.2) -- (11.5,1.7) -- (0.5,1.7) -- cycle;
+    \node[text=gray, font=\scriptsize] at (6,0.95) {$\downarrow$ Generated questions appear here as editable cards};
+\end{tikzpicture}
+\end{center}
+
+\begin{tipbox}
+The AI quiz generator uses prompt templates that you can customize. Click the gear icon in the header to open the Prompt Editor. The ``Generate from Reading'' template works best when you add source materials.
+\end{tipbox}
+
+\subsection{AI Review of Quizzes}
+
+After loading a quiz's questions, click the \textbf{AI Review} button in the quiz header. The AI examines every question and its answers, identifying:
+
+\begin{itemize}[leftmargin=*]
+    \item Ambiguous or unclear wording that could confuse students
+    \item Questions where multiple answers could reasonably be considered correct
+    \item Trick questions or misleading phrasing
+    \item Potential factual errors
+    \item Grammar or formatting issues
+    \item Specific suggestions for improvement
+\end{itemize}
+
+The review results stream in below the questions. Each issue references a specific question number with a concrete suggestion.
+
+\begin{notebox}
+AI Review uses the ``Review Quiz for Issues'' prompt template, which you can customize via the Prompt Editor. You can also add templates for exam review, rubric review, etc.
+\end{notebox}
 
 
 % ══════════════════════════════════════════════════════
@@ -711,23 +920,45 @@ Click \textbf{AI Assist} and describe the equation you need in plain English (e.
 \section{AI Assistant}
 % ══════════════════════════════════════════════════════
 
-The AI Assistant tab provides a chat interface powered by Claude Code. It can interact with your Canvas course through MCP (Model Context Protocol) tools.
+The AI Assistant tab has a two-panel layout: a \textbf{skills/macros panel} on the left and a \textbf{chat interface} on the right.
 
-\subsection{What It Can Do}
+\subsection{AI Skills Panel}
+
+The left panel shows clickable macro buttons for common AI tasks. Each button corresponds to a prompt template stored in \texttt{prompts.json}. The default skills include:
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8,
+    skill/.style={draw=gray!40, fill=gray!8, rounded corners=4pt, minimum width=3.8cm, minimum height=0.9cm, text=navy, font=\scriptsize, align=center}
+]
+    \node[skill] at (0,3) {\textbf{Generate Quiz Questions}\\Create quiz from topic/sources};
+    \node[skill] at (0,1.8) {\textbf{Generate from Reading}\\Quiz from course material};
+    \node[skill] at (0,0.6) {\textbf{Generate Assignment}\\Full assignment with rubric};
+    \node[skill] at (5,3) {\textbf{Generate Exam}\\Mixed-type comprehensive exam};
+    \node[skill] at (5,1.8) {\textbf{Review Quiz for Issues}\\Wording, ambiguity, errors};
+    \node[skill] at (5,0.6) {\textbf{Review Assignment}\\Clarity, completeness check};
+\end{tikzpicture}
+\end{center}
+
+Click a skill $\to$ a prompt dialog asks for your input (topic, content, etc.) $\to$ the completed prompt is sent to the chat. Responses stream in the chat panel on the right.
+
+The gear icon at the top of the skills panel opens the Prompt Editor, where you can customize any skill's prompt or add new ones.
+
+\subsection{Chat Interface}
+
+The right panel is a free-form chat with Claude. It can:
 
 \begin{itemize}[leftmargin=*]
-    \item Generate quiz questions on a topic
-    \item Write assignment descriptions and rubrics
+    \item Generate quiz questions, exams, and assignment descriptions
+    \item Write rubrics and grading criteria
     \item Draft course announcements
-    \item Look up student enrollment and course data
+    \item Look up student enrollment and course data (via MCP)
     \item Answer questions about Canvas course content
+    \item Review and critique assessment materials
 \end{itemize}
-
-\subsection{Using the Chat}
 
 \begin{enumerate}[leftmargin=*]
     \item Select a course from the dropdown (gives the AI context about which course to query).
-    \item Type your request in the text box or click a suggestion chip.
+    \item Type your request in the text box, click a suggestion chip, or use a skill macro.
     \item Press Enter or click Send.
     \item The response streams in real-time.
 \end{enumerate}
@@ -750,6 +981,83 @@ For the AI to access Canvas data directly, you need a Canvas MCP server configur
 \begin{warnbox}
 The \texttt{canvas.mcp.json} file contains your API token and is excluded from version control by \texttt{.gitignore}. Never commit this file.
 \end{warnbox}
+
+
+% ══════════════════════════════════════════════════════
+\section{Prompt Templates}
+\label{sec:prompts}
+% ══════════════════════════════════════════════════════
+
+Prompt templates are editable ``recipes'' that the AI uses for specific tasks. They are stored in \texttt{prompts.json} in the project directory and can be edited through the GUI.
+
+\subsection{Opening the Prompt Editor}
+
+Click the \textbf{gear icon} (\(\circledS\)) in the application header bar (next to the course selector). This opens a modal with:
+\begin{itemize}[leftmargin=*]
+    \item A \textbf{list of templates} on the left.
+    \item An \textbf{editing panel} on the right showing the selected template's name, description, and prompt text.
+\end{itemize}
+
+\subsection{Template Placeholders}
+
+Prompt templates use curly-brace placeholders that get filled in at runtime:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Placeholder} & \textbf{Filled with} \\
+\midrule
+\texttt{\{topic\}} & The user's topic or instructions \\
+\texttt{\{content\}} & Content being reviewed (quiz text, assignment description) \\
+\texttt{\{source\_material\}} & Concatenated text from selected source materials \\
+\texttt{\{num\_questions\}} & Number of questions to generate \\
+\texttt{\{question\_type\}} & Question type (multiple\_choice, essay, etc.) \\
+\texttt{\{points\}} & Points per question \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Example: Custom Review Prompt}
+
+Suppose you want a template that specifically checks for Bloom's taxonomy coverage:
+
+\begin{lstlisting}[title={Example custom prompt template}]
+You are an exam designer for a college-level course. Analyze the
+following questions and classify each by Bloom's taxonomy level
+(Remember, Understand, Apply, Analyze, Evaluate, Create).
+
+Questions:
+{content}
+
+For each question:
+1. State the Bloom's level
+2. Explain your classification
+3. Suggest how to elevate the question to a higher level
+
+Provide a summary table at the end.
+\end{lstlisting}
+
+\subsection{Default Templates}
+
+\begin{description}[leftmargin=*]
+    \item[\texttt{generate\_quiz}] Generates quiz questions with structured JSON output. Handles MC, T/F, short answer, essay, and mixed types.
+    \item[\texttt{generate\_from\_reading}] Like \texttt{generate\_quiz} but emphasizes comprehension over memorization when source material is provided.
+    \item[\texttt{generate\_assignment}] Creates a complete assignment with title, HTML instructions, and grading criteria.
+    \item[\texttt{generate\_exam}] Creates a comprehensive exam with mixed question types and varied cognitive levels.
+    \item[\texttt{review\_quiz}] Identifies ambiguous wording, multiple-correct-answer problems, trick questions, and factual errors.
+    \item[\texttt{review\_assignment}] Checks assignment descriptions for clarity, missing information, and grading criteria.
+    \item[\texttt{review\_exam}] Assesses coverage, difficulty balance, Bloom's levels, time management, and point distribution.
+\end{description}
+
+\subsection{Adding and Deleting Templates}
+
+\begin{itemize}[leftmargin=*]
+    \item Click \textbf{+ New Prompt} in the editor header to create a new template. You'll be asked for a key name.
+    \item Fill in the name, description, and prompt text. Use placeholders where appropriate.
+    \item Click \textbf{Save} to persist changes to \texttt{prompts.json}.
+    \item Click \textbf{Delete} to remove a template.
+\end{itemize}
 
 
 % ══════════════════════════════════════════════════════
@@ -780,18 +1088,67 @@ The \texttt{canvas.mcp.json} file contains your API token and is excluded from v
     \item Go to the \textbf{Quizzes} tab and click \textbf{+ New}.
     \item Enter a title and set the quiz type (Graded Quiz, Practice Quiz, etc.).
     \item Click \textbf{Create Quiz}.
-    \item Click \textbf{+ Add Question} and fill in the question details.
-    \item Repeat for each question.
+    \item Click \textbf{+ Add Question}. Choose a question type from the grid (e.g., Multiple Choice).
+    \item Fill in the question text, points, and answers. Click \textbf{Add Question}.
+    \item Repeat for each question --- you can mix different types.
     \item When ready, click \textbf{Publish} to make it available to students.
+\end{enumerate}
+
+\subsection{AI Quiz from Course Readings}
+
+\begin{enumerate}[leftmargin=*]
+    \item Go to the \textbf{Quizzes} tab and click \textbf{AI Generate}.
+    \item Enter a topic: ``Stellar evolution and the Hertzsprung-Russell diagram.''
+    \item Click \textbf{+ Add Sources}, switch to \textbf{Local Files}, navigate to your lecture notes PDF, check the box, and click \textbf{Add Selected}.
+    \item Set: 8 questions, Mix, 2 pts each.
+    \item Click \textbf{Generate Questions}. Wait for the AI to produce questions.
+    \item Review each generated question. Edit wording, fix answers, adjust points, delete weak questions.
+    \item Click \textbf{Create Draft Quiz in Canvas}.
+    \item The quiz appears in your sidebar. Click \textbf{AI Review} to check for issues.
+    \item Fix any flagged problems, then \textbf{Publish}.
+\end{enumerate}
+
+\subsection{AI-Generated Problem Set}
+
+\begin{enumerate}[leftmargin=*]
+    \item Go to the \textbf{Assignments} tab and click \textbf{AI Generate}.
+    \item Enter: ``Problem set on orbital mechanics. Include derivations, numerical calculations, and one Python coding problem.''
+    \item Add sources: select the relevant Canvas page and a local textbook chapter PDF.
+    \item Select \textbf{Problem Set}, 100 points.
+    \item Click \textbf{Generate Assignment}.
+    \item Edit the generated HTML description in the split editor. The live preview shows how students will see it.
+    \item Click \textbf{Create Draft Assignment in Canvas}.
+    \item Open the draft, click \textbf{AI Review} for a clarity check, then \textbf{Publish}.
+\end{enumerate}
+
+\subsection{Reviewing an Existing Exam}
+
+\begin{enumerate}[leftmargin=*]
+    \item Load the quiz/exam in the \textbf{Quizzes} tab.
+    \item Click \textbf{AI Review} in the header.
+    \item The AI streams a detailed review: question-by-question analysis of wording, difficulty, potential issues.
+    \item For each flagged issue, edit the question text directly in the side-by-side editor.
+    \item Click \textbf{Save} on each modified question.
 \end{enumerate}
 
 \subsection{Uploading Course Materials}
 
 \begin{enumerate}[leftmargin=*]
     \item Go to the \textbf{Files} tab.
-    \item In the left panel, navigate to the file you want to upload.
+    \item In the left panel, navigate to the file you want to upload. Use the $\uparrow$~Up button, Home, or Desktop buttons to navigate.
+    \item Optionally use the type filter (PDF, Code, etc.) to find specific files.
     \item Drag the file onto the target Canvas folder in the right panel.
     \item Confirm the upload in the dialog.
+\end{enumerate}
+
+\subsection{Customizing an AI Prompt}
+
+\begin{enumerate}[leftmargin=*]
+    \item Click the \textbf{gear icon} in the header.
+    \item Select a template from the left panel (e.g., ``Review Quiz for Issues'').
+    \item Edit the prompt text. For example, add: ``Also check that each question maps to a specific learning objective.''
+    \item Click \textbf{Save}.
+    \item The next time you use AI Review or the skill macro, it will use your updated prompt.
 \end{enumerate}
 
 
@@ -837,7 +1194,7 @@ Student Progress shows no data & The course may not have graded assignments yet,
 \vfill
 \begin{center}
 \textcolor{gray}{\rule{0.5\textwidth}{0.5pt}}\\[0.5em]
-\textcolor{gray}{\small Canvas Course Manager --- User Guide v1.0}\\
+\textcolor{gray}{\small Canvas Course Manager --- User Guide v2.0}\\
 \textcolor{gray}{\small Copyright \copyright{} 2025 Christopher Stubbs, Harvard University}\\
 \textcolor{gray}{\small Licensed under CC BY-NC 4.0 --- \url{https://creativecommons.org/licenses/by-nc/4.0/}}\\
 \textcolor{gray}{\small\today}

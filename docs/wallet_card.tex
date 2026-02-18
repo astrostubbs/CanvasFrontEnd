@@ -1,0 +1,249 @@
+\documentclass[10pt,letterpaper,landscape]{article}
+
+\usepackage[margin=0.4in]{geometry}
+\usepackage{multicol}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{tcolorbox}
+
+% ── Colors ────────────────────────────────────────────
+\definecolor{crimson}{HTML}{A51C30}
+\definecolor{navy}{HTML}{1E1E1E}
+\definecolor{lightgray}{HTML}{F0F0F0}
+\definecolor{teal}{HTML}{1D8348}
+\definecolor{amber}{HTML}{B7950B}
+
+% ── No page number ────────────────────────────────────
+\pagestyle{empty}
+
+% ── Compact spacing ───────────────────────────────────
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+\setlength{\columnsep}{16pt}
+
+% ── Section styling ───────────────────────────────────
+\newcommand{\chead}[1]{{\color{crimson}\bfseries\normalsize #1}\vspace{1pt}\par\noindent\textcolor{crimson}{\rule{\linewidth}{0.4pt}}\vspace{2pt}\par}
+\newcommand{\csub}[1]{{\color{navy}\bfseries\small #1}\par}
+\newcommand{\kbd}[1]{\colorbox{lightgray}{\texttt{\small #1}}}
+
+\begin{document}
+
+% ── Header ────────────────────────────────────────────
+\begin{center}
+{\Large\bfseries\color{crimson} Canvas Course Manager} \quad {\large Quick Reference Card}\\[1pt]
+{\small\color{gray} Harvard University \quad|\quad v2.0 \quad|\quad \url{http://localhost:5050}}
+\end{center}
+\vspace{-2pt}
+\textcolor{crimson}{\rule{\textwidth}{1pt}}
+\vspace{4pt}
+
+\begin{multicols}{4}
+
+% ════════════════════════════════════════
+\chead{Getting Started}
+% ════════════════════════════════════════
+
+\textbf{Start the server:}\\
+\kbd{set -a; source .env; set +a}\\
+\kbd{python canvas\_gui.py}\\[2pt]
+Open \textbf{localhost:5050} in browser.\\[2pt]
+Select a course from the dropdown to load all tabs.
+
+\textbf{Required .env variables:}\\
+\kbd{CANVAS\_API\_TOKEN} --- your token\\
+\kbd{CANVAS\_API\_URL} --- with \texttt{/api/v1}\\
+\kbd{LOCAL\_ROOT} --- local file directory
+
+% ════════════════════════════════════════
+\chead{9 Tabs}
+% ════════════════════════════════════════
+
+\begin{tabular}{@{}ll@{}}
+\textbf{Browse} & Course modules, pages \\
+\textbf{Calendar} & Monthly schedule view \\
+\textbf{Students} & Scores, access stats \\
+\textbf{Files} & Local $\leftrightarrow$ Canvas \\
+\textbf{Assignments} & Create, edit, AI gen \\
+\textbf{Quizzes} & Questions, AI gen \\
+\textbf{Pages} & Wiki page editor \\
+\textbf{LaTeX} & Equations $\to$ Canvas \\
+\textbf{AI Assist} & Chat + skill macros \\
+\end{tabular}
+
+% ════════════════════════════════════════
+\chead{Browse Tab}
+% ════════════════════════════════════════
+
+\textbullet\ Click module to expand/collapse\\
+\textbullet\ Items grouped by type\\
+\textbullet\ Quick links: Gradebook, Syllabus, Files, People\\
+\textbullet\ Click any item $\to$ opens in Canvas
+
+% ════════════════════════════════════════
+\chead{Calendar}
+% ════════════════════════════════════════
+
+\textcolor{crimson}{\rule{6pt}{6pt}} Assignment due dates\\
+\textcolor{amber}{\rule{6pt}{6pt}} Quiz due dates\\
+\textcolor{purple}{\rule{6pt}{6pt}} Availability windows\\[2pt]
+\textbullet\ Click event $\to$ opens \emph{local} editor\\
+\textbullet\ Prev/Next/Today navigation
+
+% ════════════════════════════════════════
+\chead{Students}
+% ════════════════════════════════════════
+
+\textbullet\ Summary: count, mean, median, missing\\
+\textbullet\ Ranked score bars (green/yellow/red)\\
+\textbullet\ \textbf{Canvas Access Statistics:} page views + participations per student\\
+\textbullet\ Missing \& late submission lists\\
+\textbullet\ Per-assignment averages
+
+% ════════════════════════════════════════
+\chead{Files}
+% ════════════════════════════════════════
+
+\csub{Two-Panel Layout}
+Left: local files \quad Right: Canvas files\\[2pt]
+\textbullet\ \textbf{Drag \& drop} local $\to$ Canvas folder\\
+\textbullet\ \textbf{Type filters:} All, PDF, Python, Images, Docs, Data, Code\\
+\textbullet\ \textbf{Navigate:} $\uparrow$~Up, Home, Desktop buttons\\
+\textbullet\ Double-click folder to enter it\\
+\textbullet\ Click path display to type a path\\
+\textbullet\ Panels are resizable (drag divider)
+
+% ════════════════════════════════════════
+\chead{Assignments}
+% ════════════════════════════════════════
+
+\csub{Manual}
+\textbf{+ New} $\to$ fill form $\to$ Create\\
+Click sidebar item $\to$ edit in split editor\\
+\textbf{Save Changes} appears on any edit
+
+\csub{AI Generate}
+\textbf{AI Generate} button $\to$ enter topic $\to$ optionally add source materials $\to$ Generate $\to$ preview/edit $\to$ \textbf{Create Draft Assignment}
+
+\csub{AI Review}
+Open an assignment $\to$ \textbf{AI Review} button $\to$ streaming review of wording, clarity, completeness
+
+% ════════════════════════════════════════
+\chead{Quizzes}
+% ════════════════════════════════════════
+
+\csub{Manual}
+\textbf{+ New} $\to$ title, type $\to$ Create\\
+\textbf{+ Add Question}:\\
+\quad 1. Pick type (MC, T/F, Short, Essay, etc.)\\
+\quad 2. Fill in question + answers\\
+\quad 3. Add Question
+
+\csub{AI Generate}
+\textbf{AI Generate} $\to$ topic + sources + template $\to$ Generate $\to$ review/edit each Q $\to$ \textbf{Create Draft Quiz}
+
+\csub{AI Review}
+Load quiz $\to$ \textbf{AI Review} $\to$ identifies ambiguities, errors, trick questions
+
+\csub{Question Types}
+Multiple Choice, True/False, Short Answer, Essay, Numerical, Multiple Answers
+
+% ════════════════════════════════════════
+\chead{Pages}
+% ════════════════════════════════════════
+
+\textbullet\ Sidebar list of all pages\\
+\textbullet\ Click to edit (HTML source + preview)\\
+\textbullet\ Create, publish/unpublish, save
+
+% ════════════════════════════════════════
+\chead{LaTeX $\to$ Canvas}
+% ════════════════════════════════════════
+
+1. Type LaTeX in equation bar\\
+2. Live preview renders it\\
+3. \textbf{Insert} places \texttt{<img>} tag\\[2pt]
+\textbullet\ \textbf{Convert All \$\ldots\$} --- batch convert\\
+\textbullet\ \textbf{AI Assist} --- describe equation in English\\
+\textbullet\ \textbf{Quick symbols} toolbar\\
+\textbullet\ Load/Save Canvas pages directly
+
+% ════════════════════════════════════════
+\chead{AI Assistant}
+% ════════════════════════════════════════
+
+\csub{Skills Panel (left)}
+Clickable prompt macros for common tasks: generate quiz, generate exam, generate assignment, review quiz, review assignment, review exam.\\[2pt]
+Click a skill $\to$ enter input $\to$ auto-sends to chat.
+
+\csub{Chat (right)}
+Free-form chat with Claude. Course context auto-included. Responses stream in real-time.
+
+% ════════════════════════════════════════
+\chead{Prompt Templates}
+% ════════════════════════════════════════
+
+\textbullet\ Click \textbf{gear icon} (\texttt{\small\(\circledS\)}) in header\\
+\textbullet\ View/edit all prompt templates\\
+\textbullet\ Placeholders: \texttt{\{topic\}}, \texttt{\{content\}}, \texttt{\{source\_material\}}, \texttt{\{num\_questions\}}, \texttt{\{question\_type\}}, \texttt{\{points\}}\\
+\textbullet\ Add new / delete existing\\
+\textbullet\ Changes saved to \texttt{prompts.json}
+
+% ════════════════════════════════════════
+\chead{Source Materials}
+% ════════════════════════════════════════
+
+When generating quizzes or assignments with AI, add context from:
+
+\begin{tabular}{@{}ll@{}}
+\textbf{Canvas Pages} & Select from list \\
+\textbf{Assignments} & Select descriptions \\
+\textbf{Local Files} & Browse \& select \\
+\textbf{Free Text} & Paste/type notes \\
+\end{tabular}
+
+\vspace{2pt}
+Sources appear as removable chips.
+
+% ════════════════════════════════════════
+\chead{Split Editors}
+% ════════════════════════════════════════
+
+Assignment \& quiz editors show:\\
+\textbf{Left:} HTML source (editable)\\
+\textbf{Right:} Rendered preview (live)\\[2pt]
+All panel dividers are draggable.
+
+% ════════════════════════════════════════
+\chead{Key Workflows}
+% ════════════════════════════════════════
+
+\csub{AI Quiz from Readings}
+Files tab: find reading $\to$\\
+Quizzes: AI Generate $\to$\\
+Add source (local file) $\to$\\
+Set topic, \# questions $\to$\\
+Generate $\to$ edit $\to$ Create Draft
+
+\csub{Weekly Check-In}
+Students tab: check missing/late $\to$\\
+Calendar: see upcoming deadlines $\to$\\
+Assignments: update descriptions
+
+\csub{Review Before Publishing}
+Load quiz or assignment $\to$\\
+Click \textbf{AI Review} $\to$\\
+Fix flagged issues $\to$ Publish
+
+\end{multicols}
+
+\vspace{-2pt}
+\textcolor{crimson}{\rule{\textwidth}{0.5pt}}
+\begin{center}
+{\scriptsize\color{gray} Copyright \copyright{} 2025 Christopher Stubbs, Harvard University --- CC BY-NC 4.0 \quad|\quad \url{https://github.com/astrostubbs/CanvasFrontEnd}}
+\end{center}
+
+\end{document}
