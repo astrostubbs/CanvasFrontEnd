@@ -65,6 +65,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/HarvardLogo.png")
+def harvard_logo():
+    return send_file(os.path.join(app.root_path, "HarvardLogo.png"), mimetype="image/png")
+
+
 # ── Config API ─────────────────────────────────────────────────────────
 
 @app.route("/api/config")

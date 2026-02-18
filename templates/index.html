@@ -10,7 +10,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
 
 /* ── Header ─────────────────────────────────────────── */
 header { background: #A51C30; padding: 10px 20px; display: flex; align-items: center; gap: 16px; border-bottom: 2px solid #8c1726; }
-header .harvard-shield { width: 32px; height: 38px; flex-shrink: 0; }
+header .harvard-logo { height: 40px; flex-shrink: 0; }
 header h1 { font-size: 18px; color: #fff; white-space: nowrap; }
 header select { background: #fff; color: #1a1a1a; border: 1px solid #ddd; padding: 6px 12px; border-radius: 4px; font-size: 14px; min-width: 300px; }
 header select:focus { outline: 2px solid #fff; }
@@ -242,17 +242,7 @@ select.form-input { cursor: pointer; }
 <body>
 
 <header>
-    <!-- Harvard Shield SVG -->
-    <svg class="harvard-shield" viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 0 L36 8 L36 30 L18 44 L0 30 L0 8 Z" fill="#fff"/>
-        <path d="M18 2 L34 9 L34 29 L18 42 L2 29 L2 9 Z" fill="#A51C30"/>
-        <rect x="6" y="14" width="10" height="8" rx="1" fill="#fff"/>
-        <rect x="20" y="14" width="10" height="8" rx="1" fill="#fff"/>
-        <rect x="10" y="25" width="16" height="8" rx="1" fill="#fff"/>
-        <text x="11" y="20.5" font-family="Georgia,serif" font-size="6" font-weight="bold" fill="#A51C30">VE</text>
-        <text x="25" y="20.5" font-family="Georgia,serif" font-size="6" font-weight="bold" fill="#A51C30">RI</text>
-        <text x="14.5" y="31.5" font-family="Georgia,serif" font-size="6" font-weight="bold" fill="#A51C30">TAS</text>
-    </svg>
+    <img src="/HarvardLogo.png" alt="Harvard FAS" class="harvard-logo">
     <h1>Canvas Course Manager</h1>
     <select id="course-select"><option value="">Loading courses...</option></select>
     <div class="header-info" id="header-info"></div>
