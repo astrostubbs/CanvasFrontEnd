@@ -648,7 +648,7 @@ def canvas_student_summary(course_id):
 @app.route("/api/canvas/course/<int:course_id>/analytics/progress")
 def canvas_student_progress(course_id):
     """Comprehensive student progress data: submissions + scores."""
-    with ThreadPoolExecutor(max_workers=3) as pool:
+    with ThreadPoolExecutor(max_workers=4) as pool:
         f_students = pool.submit(
             canvas_get, f"courses/{course_id}/users",
             {"enrollment_type[]": "student", "per_page": 100}
@@ -661,10 +661,18 @@ def canvas_student_progress(course_id):
             canvas_get, f"courses/{course_id}/enrollments",
             {"type[]": "StudentEnrollment", "per_page": 100, "state[]": "active"}
         )
+        f_summaries = pool.submit(
+            canvas_get, f"courses/{course_id}/analytics/student_summaries",
+            {"per_page": 100}
+        )
 
     students = f_students.result()
     assignments = f_assignments.result()
     enrollments = f_enrollments.result()
+    try:
+        summaries = f_summaries.result()
+    except Exception:
+        summaries = []
 
     # Build student map with enrollment grades
     student_map = {}
@@ -721,10 +729,21 @@ def canvas_student_progress(course_id):
             except Exception:
                 pass
 
+    # Build access statistics from student summaries
+    access_stats = {}
+    for s in summaries:
+        uid = s.get("id")
+        if uid:
+            access_stats[str(uid)] = {
+                "page_views": s.get("page_views", 0),
+                "participations": s.get("participations", 0),
+            }
+
     return jsonify({
         "students": list(student_map.values()),
         "assignments": assignment_info,
         "submissions": {str(k): v for k, v in submissions_by_student.items()},
+        "access_stats": access_stats,
     })
 
 
@@ -746,6 +765,7 @@ def canvas_calendar_data(course_id):
         if a.get("due_at") or a.get("unlock_at"):
             events.append({
                 "type": "assignment",
+                "id": a["id"],
                 "name": a.get("name", ""),
                 "due_at": a.get("due_at"),
                 "unlock_at": a.get("unlock_at"),
@@ -757,6 +777,7 @@ def canvas_calendar_data(course_id):
         if q.get("due_at"):
             events.append({
                 "type": "quiz",
+                "id": q["id"],
                 "name": q.get("title", ""),
                 "due_at": q.get("due_at"),
                 "unlock_at": q.get("unlock_at"),

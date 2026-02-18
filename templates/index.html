@@ -6,7 +6,7 @@
 <title>Canvas Course Manager</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #ffffff; color: #1a1a1a; height: 100vh; display: flex; flex-direction: column; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #ffffff; color: #1a1a1a; height: 100vh; display: flex; flex-direction: column; font-size: 14px; }
 
 /* ── Header ─────────────────────────────────────────── */
 header { background: #A51C30; padding: 10px 20px; display: flex; align-items: center; gap: 16px; border-bottom: 2px solid #8c1726; }
@@ -18,7 +18,7 @@ header select:focus { outline: 2px solid #fff; }
 
 /* ── Top-level Tabs ────────────────────────────────── */
 .main-tab-bar { display: flex; background: #f8f8f8; border-bottom: 2px solid #e0e0e0; padding: 0 12px; }
-.main-tab-btn { padding: 10px 20px; font-size: 13px; font-weight: 600; color: #666; background: transparent; border: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; margin-bottom: -2px; }
+.main-tab-btn { padding: 10px 20px; font-size: 14px; font-weight: 600; color: #666; background: transparent; border: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; margin-bottom: -2px; }
 .main-tab-btn:hover { color: #1a1a1a; background: rgba(165, 28, 48, 0.05); }
 .main-tab-btn.active { color: #A51C30; border-bottom-color: #A51C30; }
 
@@ -35,7 +35,7 @@ header select:focus { outline: 2px solid #fff; }
 /* ── Two-panel layout (Files tab) ──────────────────── */
 .panels { display: flex; flex: 1; overflow: hidden; }
 .panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.panel:first-child { border-right: 2px solid #e0e0e0; }
+.panel:first-child { border-right: none; }
 .panel-header { background: #f8f8f8; padding: 10px 16px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e0e0e0; color: #1a1a1a; }
 .panel-header .icon { font-size: 18px; }
 .panel-header .path { font-weight: 400; color: #888; font-size: 12px; margin-left: auto; }
@@ -43,20 +43,20 @@ header select:focus { outline: 2px solid #fff; }
 
 /* ── Full-screen editor layout ─────────────────────── */
 .editor-layout { display: flex; flex: 1; overflow: hidden; }
-.editor-sidebar { width: 280px; border-right: 1px solid #e0e0e0; overflow-y: auto; display: flex; flex-direction: column; background: #fafafa; }
+.editor-sidebar { width: 280px; min-width: 150px; border-right: none; overflow-y: auto; display: flex; flex-direction: column; background: #fafafa; }
 .editor-sidebar-header { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; background: #f5f5f5; }
-.editor-sidebar-header span { font-weight: 600; font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+.editor-sidebar-header span { font-weight: 600; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
 .editor-sidebar-list { flex: 1; overflow-y: auto; padding: 8px; }
 .editor-main { flex: 1; overflow-y: auto; padding: 20px; background: #fff; }
 
 /* ── Tree View ──────────────────────────────────────── */
 .tree { list-style: none; padding-left: 0; }
 .tree .tree { padding-left: 20px; }
-.tree-item { padding: 4px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; color: #1a1a1a; }
+.tree-item { padding: 4px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: flex-start; gap: 6px; font-size: 14px; color: #1a1a1a; }
 .tree-item:hover { background: #f0f0f0; }
 .tree-item.selected { background: #fce4e8; }
-.tree-item .icon { width: 16px; text-align: center; flex-shrink: 0; }
-.tree-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.tree-item .icon { width: 16px; text-align: center; flex-shrink: 0; margin-top: 2px; }
+.tree-item .name { flex: 1; word-wrap: break-word; overflow-wrap: break-word; }
 .tree-item .meta { color: #999; font-size: 11px; flex-shrink: 0; }
 .tree-item.directory > .icon { color: #d4a017; }
 .tree-item.file > .icon { color: #1D8348; }
@@ -70,7 +70,7 @@ header select:focus { outline: 2px solid #fff; }
 .tree-item.drag-over { background: #fce4e8; outline: 2px dashed #A51C30; }
 
 /* ── Sections ───────────────────────────────────────── */
-.section-header { padding: 8px 12px; font-weight: 600; font-size: 13px; color: #A51C30; border-bottom: 1px solid #e0e0e0; margin-top: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.section-header { padding: 8px 12px; font-weight: 600; font-size: 14px; color: #A51C30; border-bottom: 1px solid #e0e0e0; margin-top: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .section-header:hover { background: #f5f5f5; }
 .section-header .toggle { transition: transform 0.2s; }
 .section-header.collapsed .toggle { transform: rotate(-90deg); }
@@ -107,7 +107,7 @@ select.form-input { cursor: pointer; }
 .list-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; margin-bottom: 2px; }
 .list-item:hover { background: #f5f5f5; }
 .list-item.selected { background: #fce4e8; border-color: #A51C30; }
-.list-item .item-title { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #1a1a1a; }
+.list-item .item-title { flex: 1; font-size: 14px; word-wrap: break-word; overflow-wrap: break-word; color: #1a1a1a; }
 .list-item .item-meta { font-size: 11px; color: #888; }
 .badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; }
 .badge.published { background: #d1fae5; color: #065f46; }
@@ -189,8 +189,8 @@ select.form-input { cursor: pointer; }
 @media (max-width: 1200px) { .progress-grid { grid-template-columns: 1fr; } }
 .progress-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; }
 .progress-card h4 { color: #A51C30; margin-bottom: 12px; font-size: 14px; }
-.progress-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 12px; }
-.progress-bar-label { width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #333; }
+.progress-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 13px; }
+.progress-bar-label { width: 160px; min-width: 160px; word-wrap: break-word; overflow-wrap: break-word; color: #333; font-size: 12px; }
 .progress-bar-track { flex: 1; height: 16px; background: #f0f0f0; border-radius: 3px; overflow: hidden; position: relative; }
 .progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
 .progress-bar-value { width: 50px; text-align: right; color: #666; font-size: 11px; }
@@ -211,7 +211,7 @@ select.form-input { cursor: pointer; }
 /* ── LaTeX Editor ─────────────────────────────────── */
 .latex-layout { display: flex; flex: 1; overflow: hidden; }
 .latex-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.latex-panel:first-child { border-right: 2px solid #e0e0e0; }
+.latex-panel:first-child { border-right: none; }
 .latex-toolbar { background: #f8f8f8; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; }
 .latex-toolbar .label { font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
 .latex-editor { flex: 1; width: 100%; background: #f9f9f9; color: #1a1a1a; border: none; padding: 16px; font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: 13px; line-height: 1.6; resize: none; outline: none; }
@@ -231,6 +231,31 @@ select.form-input { cursor: pointer; }
 /* ── Improved Browse Tree ─────────────────────────── */
 .module-type-group { padding-left: 20px; }
 .module-type-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px; margin-top: 4px; }
+
+/* ── Split-screen Description Editor ─────────────── */
+.desc-editor { display: flex; gap: 12px; }
+.desc-editor-source { flex: 1; min-height: 150px; font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: 12px; line-height: 1.5; resize: vertical; }
+.desc-editor-preview { flex: 1; background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 12px; min-height: 150px; overflow-y: auto; font-size: 14px; line-height: 1.6; color: #333; }
+.desc-editor-preview img.equation_image { display: inline; vertical-align: middle; max-height: 2em; }
+.desc-editor-preview em, .desc-editor-preview i { font-style: italic; }
+.desc-editor-preview strong, .desc-editor-preview b { font-weight: 700; }
+.desc-editor-preview p { margin: 4px 0; }
+.desc-editor-preview h2, .desc-editor-preview h3 { margin: 0.5em 0 0.3em; }
+.desc-editor-preview ul, .desc-editor-preview ol { margin: 0.5em 0; padding-left: 1.5em; }
+.desc-editor-preview a { color: #2563eb; }
+
+/* ── File Filter Bar ──────────────────────────────── */
+.file-filter-bar { display: flex; gap: 4px; padding: 6px 12px; flex-wrap: wrap; background: #f8f8f8; border-bottom: 1px solid #e0e0e0; }
+.file-filter-btn { background: #fff; border: 1px solid #ddd; color: #666; padding: 3px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+.file-filter-btn:hover { border-color: #A51C30; color: #A51C30; }
+.file-filter-btn.active { background: #A51C30; color: #fff; border-color: #A51C30; }
+
+/* ── Resizable Panel Dividers ─────────────────────── */
+.resizer { background: #e0e0e0; flex-shrink: 0; position: relative; z-index: 10; transition: background 0.15s; }
+.resizer:hover, .resizer.active { background: #A51C30; }
+.resizer-col { width: 5px; cursor: col-resize; }
+.resizer-col::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 1px; height: 30px; background: #999; border-radius: 1px; }
+.resizer-col:hover::after, .resizer-col.active::after { background: #fff; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; }
@@ -278,15 +303,18 @@ select.form-input { cursor: pointer; }
                     <span class="icon">&#128187;</span> Local Files
                     <span class="path" id="local-path"></span>
                 </div>
+                <div class="file-filter-bar" id="local-filter-bar"></div>
                 <div class="panel-body" id="local-tree">
                     <div style="padding: 20px; color: #666;">Loading local files...</div>
                 </div>
             </div>
+            <div class="resizer resizer-col" id="files-resizer"></div>
             <div class="panel" id="canvas-files-panel">
                 <div class="panel-header">
                     <span class="icon">&#9729;</span> Canvas Files
                     <span class="path" id="canvas-files-path">Select a course</span>
                 </div>
+                <div class="file-filter-bar" id="canvas-filter-bar"></div>
                 <div class="panel-body" id="canvas-files-tree">
                     <div style="padding: 20px; color: #666;">Select a course to see its files.</div>
                 </div>
@@ -303,9 +331,10 @@ select.form-input { cursor: pointer; }
                     <button class="btn small" onclick="showNewAssignmentForm()">+ New</button>
                 </div>
                 <div class="editor-sidebar-list" id="assignment-list">
-                    <div style="padding: 12px; color: #666; font-size: 13px;">Select a course first</div>
+                    <div style="padding: 12px; color: #666; font-size: 14px;">Select a course first</div>
                 </div>
             </div>
+            <div class="resizer resizer-col" data-resizer="sidebar"></div>
             <div class="editor-main" id="assignment-editor">
                 <div style="text-align: center; padding: 60px; color: #666;">
                     <p style="font-size: 16px; margin-bottom: 8px;">Assignment Editor</p>
@@ -324,9 +353,10 @@ select.form-input { cursor: pointer; }
                     <button class="btn small" onclick="showNewQuizForm()">+ New</button>
                 </div>
                 <div class="editor-sidebar-list" id="quiz-list">
-                    <div style="padding: 12px; color: #666; font-size: 13px;">Select a course first</div>
+                    <div style="padding: 12px; color: #666; font-size: 14px;">Select a course first</div>
                 </div>
             </div>
+            <div class="resizer resizer-col" data-resizer="sidebar"></div>
             <div class="editor-main" id="quiz-editor">
                 <div style="text-align: center; padding: 60px; color: #666;">
                     <p style="font-size: 16px; margin-bottom: 8px;">Quiz Editor</p>
@@ -359,9 +389,10 @@ select.form-input { cursor: pointer; }
                     <button class="btn small" onclick="showNewPageForm()">+ New</button>
                 </div>
                 <div class="editor-sidebar-list" id="page-list">
-                    <div style="padding: 12px; color: #666; font-size: 13px;">Select a course first</div>
+                    <div style="padding: 12px; color: #666; font-size: 14px;">Select a course first</div>
                 </div>
             </div>
+            <div class="resizer resizer-col" data-resizer="sidebar"></div>
             <div class="editor-main" id="page-editor">
                 <div style="text-align: center; padding: 60px; color: #666;">
                     <p style="font-size: 16px; margin-bottom: 8px;">Page Editor</p>
@@ -427,6 +458,7 @@ Or type inline LaTeX with $...$ delimiters and click 'Convert All $...$':
                     <span style="font-size:11px; color:#666;" id="latex-char-count">0 chars</span>
                 </div>
             </div>
+            <div class="resizer resizer-col" data-resizer="latex"></div>
             <!-- Right: Canvas Preview -->
             <div class="latex-panel">
                 <div class="latex-toolbar">
@@ -556,6 +588,115 @@ document.querySelectorAll(".main-tab-btn").forEach(btn => {
         btn.classList.add("active");
         document.getElementById(`view-${btn.dataset.tab}`).classList.add("active");
     });
+});
+
+function switchToTab(tabName) {
+    document.querySelectorAll(".main-tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));
+    const btn = document.querySelector(`.main-tab-btn[data-tab="${tabName}"]`);
+    if (btn) btn.classList.add("active");
+    const view = document.getElementById(`view-${tabName}`);
+    if (view) view.classList.add("active");
+}
+
+// ══════════════════════════════════════════════════════
+// FILE TYPE FILTERING
+// ══════════════════════════════════════════════════════
+const FILE_TYPE_FILTERS = {
+    all: null,
+    pdf: ['.pdf'],
+    python: ['.py', '.ipynb'],
+    images: ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.bmp', '.tiff'],
+    docs: ['.doc', '.docx', '.ppt', '.pptx', '.txt', '.rtf'],
+    data: ['.csv', '.xlsx', '.xls', '.json', '.xml', '.dat', '.fits'],
+    code: ['.py', '.js', '.html', '.css', '.r', '.m', '.sh', '.tex', '.java', '.c', '.cpp', '.ipynb'],
+};
+let currentLocalFilter = 'all';
+let currentCanvasFilter = 'all';
+
+function buildFilterBar(containerId, handler) {
+    const bar = document.getElementById(containerId);
+    if (!bar) return;
+    bar.innerHTML = '';
+    for (const key of Object.keys(FILE_TYPE_FILTERS)) {
+        const btn = document.createElement('button');
+        btn.className = 'file-filter-btn' + (key === 'all' ? ' active' : '');
+        btn.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+        btn.dataset.filter = key;
+        btn.onclick = () => handler(key, btn);
+        bar.appendChild(btn);
+    }
+}
+
+function fileMatchesFilter(filename, filterType) {
+    if (filterType === 'all' || !FILE_TYPE_FILTERS[filterType]) return true;
+    const ext = '.' + filename.split('.').pop().toLowerCase();
+    return FILE_TYPE_FILTERS[filterType].includes(ext);
+}
+
+function filterLocalFiles(filterType, btn) {
+    currentLocalFilter = filterType;
+    document.querySelectorAll('#local-filter-bar .file-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const container = document.getElementById('local-tree');
+    container.querySelectorAll('.tree-item.file').forEach(item => {
+        const name = item.querySelector('.name')?.textContent || '';
+        const li = item.closest('li');
+        if (li) li.style.display = fileMatchesFilter(name, filterType) ? '' : 'none';
+    });
+}
+
+function filterCanvasFiles(filterType, btn) {
+    currentCanvasFilter = filterType;
+    document.querySelectorAll('#canvas-filter-bar .file-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const container = document.getElementById('canvas-files-tree');
+    container.querySelectorAll('.tree-item.canvas-file').forEach(item => {
+        const name = item.querySelector('.name')?.textContent || '';
+        const li = item.closest('li');
+        if (li) li.style.display = fileMatchesFilter(name, filterType) ? '' : 'none';
+    });
+}
+
+// Build filter bars on page load
+buildFilterBar('local-filter-bar', filterLocalFiles);
+buildFilterBar('canvas-filter-bar', filterCanvasFiles);
+
+
+// ══════════════════════════════════════════════════════
+// RESIZABLE PANELS
+// ══════════════════════════════════════════════════════
+document.querySelectorAll('.resizer-col').forEach(resizer => {
+    let startX, prevEl, nextEl, prevWidth, nextWidth;
+    resizer.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        prevEl = resizer.previousElementSibling;
+        nextEl = resizer.nextElementSibling;
+        if (!prevEl || !nextEl) return;
+        startX = e.clientX;
+        prevWidth = prevEl.getBoundingClientRect().width;
+        nextWidth = nextEl.getBoundingClientRect().width;
+        resizer.classList.add('active');
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
+    function onMouseMove(e) {
+        const dx = e.clientX - startX;
+        const newPrevWidth = Math.max(120, prevWidth + dx);
+        const newNextWidth = Math.max(120, nextWidth - dx);
+        prevEl.style.flex = 'none';
+        prevEl.style.width = newPrevWidth + 'px';
+        nextEl.style.flex = '1';
+    }
+    function onMouseUp() {
+        resizer.classList.remove('active');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }
 });
 
 
@@ -885,8 +1026,11 @@ function showNewAssignmentForm() {
                 <input type="text" class="form-input" id="new-asgn-name" placeholder="e.g., Problem Set 3">
             </div>
             <div class="form-group">
-                <label>Description (HTML supported)</label>
-                <textarea class="form-input" id="new-asgn-desc" placeholder="Instructions for students..." style="min-height:120px;"></textarea>
+                <label>Description (HTML source &amp; preview)</label>
+                <div class="desc-editor">
+                    <textarea class="form-input desc-editor-source" id="new-asgn-desc" placeholder="Instructions for students..." oninput="document.getElementById('new-asgn-desc-preview').innerHTML = this.value || '<span style=\\'color:#999;\\'>Preview</span>';"></textarea>
+                    <div class="desc-editor-preview" id="new-asgn-desc-preview"><span style="color:#999;">Preview</span></div>
+                </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
@@ -984,8 +1128,11 @@ async function loadAssignmentEditor(assignmentId) {
                     <input type="text" class="form-input" id="ea-name" value="${escapeHtml(a.name)}" oninput="markAssignmentDirty()">
                 </div>
                 <div class="form-group">
-                    <label>Description</label>
-                    <textarea class="form-input" id="ea-desc" style="min-height:150px;" oninput="markAssignmentDirty()">${a.description || ''}</textarea>
+                    <label>Description (HTML source &amp; preview)</label>
+                    <div class="desc-editor">
+                        <textarea class="form-input desc-editor-source" id="ea-desc" oninput="markAssignmentDirty(); updateAssignmentPreview();">${a.description || ''}</textarea>
+                        <div class="desc-editor-preview" id="ea-desc-preview">${a.description || '<span style="color:#999;">No description</span>'}</div>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -1031,6 +1178,14 @@ async function loadAssignmentEditor(assignmentId) {
 function markAssignmentDirty() {
     const btn = document.getElementById("asgn-save-btn");
     if (btn) btn.style.display = "inline-block";
+}
+
+function updateAssignmentPreview() {
+    const textarea = document.getElementById("ea-desc");
+    const preview = document.getElementById("ea-desc-preview");
+    if (textarea && preview) {
+        preview.innerHTML = textarea.value || '<span style="color:#999;">No description</span>';
+    }
 }
 
 async function saveAssignment(assignmentId) {
@@ -1248,12 +1403,12 @@ function renderQuestionCard(q, num) {
             if (isMultipleChoice) {
                 answersHtml += `<div class="answer-row">
                     <input type="radio" name="eq-correct-${q.id}" value="${i}" ${isCorrect ? 'checked' : ''} onchange="markQuestionDirty(${q.id})">
-                    <input type="text" value="${(a.text || a.html || '').replace(/"/g, '&quot;')}" class="eq-answer-${q.id}" data-answer-id="${a.id || ''}" style="flex:1; background:#2a1520; color:#e0e0e0; border:1px solid #333; padding:6px 10px; border-radius:4px; font-size:13px;" oninput="markQuestionDirty(${q.id})">
+                    <input type="text" value="${(a.text || a.html || '').replace(/"/g, '&quot;')}" class="eq-answer-${q.id}" data-answer-id="${a.id || ''}" oninput="markQuestionDirty(${q.id})">
                 </div>`;
             } else {
                 answersHtml += `<div class="answer-row">
                     <span class="correct-mark">&#10003;</span>
-                    <input type="text" value="${(a.text || a.html || '').replace(/"/g, '&quot;')}" class="eq-answer-${q.id}" data-answer-id="${a.id || ''}" style="flex:1; background:#2a1520; color:#e0e0e0; border:1px solid #333; padding:6px 10px; border-radius:4px; font-size:13px;" oninput="markQuestionDirty(${q.id})">
+                    <input type="text" value="${(a.text || a.html || '').replace(/"/g, '&quot;')}" class="eq-answer-${q.id}" data-answer-id="${a.id || ''}" oninput="markQuestionDirty(${q.id})">
                 </div>`;
             }
         }
@@ -1266,17 +1421,17 @@ function renderQuestionCard(q, num) {
             <span class="q-type">${typeLabels[q.question_type] || q.question_type}</span>
             <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
                 <label style="font-size:11px; color:#888;">Pts:</label>
-                <input type="number" value="${q.points_possible || 0}" min="0" step="0.5" id="eq-pts-${q.id}" style="width:60px; background:#2a1520; color:#e0e0e0; border:1px solid #333; padding:4px 8px; border-radius:4px; font-size:13px;" oninput="markQuestionDirty(${q.id})">
+                <input type="number" value="${q.points_possible || 0}" min="0" step="0.5" id="eq-pts-${q.id}" style="width:60px; background:#fff; color:#1a1a1a; border:1px solid #ccc; padding:4px 8px; border-radius:4px; font-size:13px;" oninput="markQuestionDirty(${q.id})">
                 <button class="btn small success" id="eq-save-${q.id}" onclick="saveQuestion(${q.id})" style="display:none;">Save</button>
                 <button class="btn small secondary" onclick="deleteQuestion(${q.id})">Delete</button>
             </div>
         </div>
         <div class="form-group" style="margin-top:8px;">
-            <div id="eq-preview-${q.id}" class="q-preview" style="background:#2a1520; border:1px solid #333; border-radius:4px; padding:10px 12px; font-size:14px; line-height:1.6; cursor:pointer; min-height:40px; color:#e0e0e0;" onclick="switchToEdit(${q.id})" title="Click to edit HTML source">
-                ${q.question_text || '<span style=&quot;color:#666;&quot;>Click to add question text...</span>'}
+            <label style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; display:block;">Question Text (HTML source &amp; preview)</label>
+            <div class="desc-editor">
+                <textarea class="form-input desc-editor-source" id="eq-text-${q.id}" style="min-height:80px;" oninput="markQuestionDirty(${q.id}); updateQuestionPreview(${q.id});">${q.question_text || ''}</textarea>
+                <div class="desc-editor-preview q-preview" id="eq-preview-${q.id}">${q.question_text || '<span style="color:#999;">No question text</span>'}</div>
             </div>
-            <textarea class="form-input" id="eq-text-${q.id}" style="min-height:80px; display:none; font-family:monospace; font-size:12px;" oninput="markQuestionDirty(${q.id})" onblur="switchToPreview(${q.id})">${q.question_text || ''}</textarea>
-            <div style="font-size:10px; color:#666; margin-top:2px;">Click the rendered text above to edit the HTML source.</div>
         </div>
         ${answersHtml}
     `;
@@ -1294,12 +1449,19 @@ function switchToEdit(questionId) {
 }
 
 function switchToPreview(questionId) {
+    // Legacy: kept for compatibility
     const preview = document.getElementById(`eq-preview-${questionId}`);
     const textarea = document.getElementById(`eq-text-${questionId}`);
     if (preview && textarea) {
-        preview.innerHTML = textarea.value || '<span style="color:#666;">Click to add question text...</span>';
-        preview.style.display = "";
-        textarea.style.display = "none";
+        preview.innerHTML = textarea.value || '<span style="color:#999;">No question text</span>';
+    }
+}
+
+function updateQuestionPreview(questionId) {
+    const textarea = document.getElementById(`eq-text-${questionId}`);
+    const preview = document.getElementById(`eq-preview-${questionId}`);
+    if (textarea && preview) {
+        preview.innerHTML = textarea.value || '<span style="color:#999;">No question text</span>';
     }
 }
 
@@ -1592,8 +1754,8 @@ function makeCalCell(year, month, day, isOtherMonth, isToday = false) {
             const badge = document.createElement("div");
             badge.className = "cal-event quiz";
             badge.textContent = ev.name;
-            badge.title = `Quiz due: ${ev.name}${ev.points ? ' (' + ev.points + ' pts)' : ''}`;
-            if (ev.html_url) badge.onclick = () => window.open(ev.html_url, "_blank");
+            badge.title = `Quiz due: ${ev.name}${ev.points ? ' (' + ev.points + ' pts)' : ''} — click to edit`;
+            badge.onclick = () => { if (ev.id) { switchToTab("quizzes"); loadQuizEditor(ev.id); } else if (ev.html_url) { window.open(ev.html_url, "_blank"); } };
             cell.appendChild(badge);
         }
 
@@ -1607,7 +1769,7 @@ function makeCalCell(year, month, day, isOtherMonth, isToday = false) {
                 badge.style.background = "rgba(233,69,96,0.2)";
                 badge.style.color = "#A51C30";
                 badge.style.borderLeftColor = "#A51C30";
-                if (ev.html_url) badge.onclick = () => window.open(ev.html_url, "_blank");
+                badge.onclick = () => { if (ev.id) { switchToTab("assignments"); loadAssignmentEditor(ev.id); } else if (ev.html_url) { window.open(ev.html_url, "_blank"); } };
                 cell.appendChild(badge);
             }
             // Show availability window (start of bar)
@@ -1720,35 +1882,45 @@ function renderStudentProgress(data) {
     }
     grid.appendChild(scoreCard);
 
-    // ── 2. Grade Distribution ──
-    const distCard = document.createElement("div");
-    distCard.className = "progress-card";
-    distCard.innerHTML = "<h4>Grade Distribution</h4>";
-    const buckets = { "A (90-100)": 0, "B (80-89)": 0, "C (70-79)": 0, "D (60-69)": 0, "F (<60)": 0 };
-    const bucketColors = { "A (90-100)": "#4ecca3", "B (80-89)": "#60a5fa", "C (70-79)": "#f0c040", "D (60-69)": "#f59e0b", "F (<60)": "#A51C30" };
-    for (const s of withScores) {
-        const sc = s.current_score || 0;
-        if (sc >= 90) buckets["A (90-100)"]++;
-        else if (sc >= 80) buckets["B (80-89)"]++;
-        else if (sc >= 70) buckets["C (70-79)"]++;
-        else if (sc >= 60) buckets["D (60-69)"]++;
-        else buckets["F (<60)"]++;
+    // ── 2. Canvas Access Statistics ──
+    const accessCard = document.createElement("div");
+    accessCard.className = "progress-card";
+    accessCard.innerHTML = "<h4>Canvas Access Statistics</h4>";
+    const accessStats = data.access_stats || {};
+    const accessList = students.map(s => {
+        const stats = accessStats[String(s.id)] || {};
+        return { name: s.name, page_views: stats.page_views || 0, participations: stats.participations || 0 };
+    }).sort((a, b) => (b.page_views + b.participations) - (a.page_views + a.participations));
+
+    if (accessList.length === 0 || Object.keys(accessStats).length === 0) {
+        accessCard.innerHTML += '<div style="color:#666; font-size:13px; padding:8px;">Access statistics not available for this course.</div>';
+    } else {
+        const maxViews = Math.max(...accessList.map(a => a.page_views), 1);
+        const maxPart = Math.max(...accessList.map(a => a.participations), 1);
+        const subHeader = document.createElement("div");
+        subHeader.style.cssText = "display:flex; gap:8px; margin-bottom:8px; font-size:11px; color:#888;";
+        subHeader.innerHTML = '<span style="width:160px; min-width:160px;"></span><span style="flex:1; text-align:center;">Page Views</span><span style="width:35px;"></span><span style="flex:1; text-align:center;">Participations</span><span style="width:35px;"></span>';
+        accessCard.appendChild(subHeader);
+        for (const a of accessList) {
+            const viewPct = (a.page_views / maxViews) * 100;
+            const partPct = (a.participations / maxPart) * 100;
+            const row = document.createElement("div");
+            row.className = "progress-bar-row";
+            row.innerHTML = `
+                <span class="progress-bar-label" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
+                <div class="progress-bar-track" style="flex:1;">
+                    <div class="progress-bar-fill" style="width:${viewPct}%; background:#60a5fa;"></div>
+                </div>
+                <span class="progress-bar-value" style="width:35px;">${a.page_views}</span>
+                <div class="progress-bar-track" style="flex:1;">
+                    <div class="progress-bar-fill" style="width:${partPct}%; background:#a78bfa;"></div>
+                </div>
+                <span class="progress-bar-value" style="width:35px;">${a.participations}</span>
+            `;
+            accessCard.appendChild(row);
+        }
     }
-    const maxBucket = Math.max(...Object.values(buckets), 1);
-    for (const [label, count] of Object.entries(buckets)) {
-        const pct = (count / maxBucket) * 100;
-        const row = document.createElement("div");
-        row.className = "progress-bar-row";
-        row.innerHTML = `
-            <span class="progress-bar-label">${label}</span>
-            <div class="progress-bar-track">
-                <div class="progress-bar-fill" style="width:${pct}%; background:${bucketColors[label]};"></div>
-            </div>
-            <span class="progress-bar-value">${count} student${count !== 1 ? 's' : ''}</span>
-        `;
-        distCard.appendChild(row);
-    }
-    grid.appendChild(distCard);
+    grid.appendChild(accessCard);
 
     // ── 3. Students with Missing Assignments ──
     const missingCard = document.createElement("div");
